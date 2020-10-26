@@ -1,0 +1,14 @@
+<launch>
+    <arg name="enable_micro" default="true"/>
+
+    <!-- rosserial -->
+    <group if="$(arg enable_micro)">
+        <node name="microcontroller_node" pkg="rosserial_python" type="serial_node.py" >
+            <param name="port" type="string" value="/dev/ttyACM0" />
+            <param name="baud" type="int" value="115200" />
+        </node>
+    </group>
+
+    <!-- <node name="django_interface_node" pkg="django_interface" type="django_interface_node.py" /> -->
+    
+</launch>
