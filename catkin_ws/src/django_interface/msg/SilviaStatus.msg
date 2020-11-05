@@ -1,3 +1,3 @@
 std_msgs/Header header
-uint8 mode
+int8 mode
 bool brew

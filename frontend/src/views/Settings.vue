@@ -5,31 +5,42 @@
       <v-card-title>Settings</v-card-title>
       <v-form>
       <v-card-subtitle>Temperature Control</v-card-subtitle>
-      <v-text-field class="mx-4" label="Boiler Setpoint" type="number" v-model="settings.T_set" suffix="C"></v-text-field>
+      <v-text-field class="mx-4" label="Boiler Setpoint" type="number" v-model="settings.temperature_setpoint" suffix="C"></v-text-field>
 
       <v-row class="mx-1">
         <v-col>
-          <v-text-field class="" label="P Gain" type="number" v-model="settings.k_p"></v-text-field>
+          <v-text-field class="" label="P Gain" type="number" v-model="settings.heater_kp"></v-text-field>
         </v-col>
         <v-col>
-          <v-text-field class="" label="I Gain" type="number" v-model="settings.k_i"></v-text-field>
+          <v-text-field class="" label="I Gain" type="number" v-model="settings.heater_ki"></v-text-field>
         </v-col>
         <v-col>
-          <v-text-field class="" label="D Gain" type="number" v-model="settings.k_d"></v-text-field>
+          <v-text-field class="" label="D Gain" type="number" v-model="settings.heater_kd"></v-text-field>
         </v-col>
       </v-row>
-      <v-select class="mx-4" label="Proportional Gain Action" :items="kp_types" v-model="settings.k_p_mode"></v-select>
 
+      <v-card-subtitle>Pressure Control</v-card-subtitle>
+      <v-text-field class="mx-4" label="Profile Time" type="number" v-model="profile_csv.profile_pressure_setpoints" suffix="s"></v-text-field>
+      <v-text-field class="mx-4" label="Profile Pressure" type="number" v-model="pprofile_csv.profile_time_setpoints" suffix="bar"></v-text-field>
+      <v-row class="mx-1">
+        <v-col>
+          <v-text-field class="" label="P Gain" type="number" v-model="settings.pump_kp"></v-text-field>
+        </v-col>
+        <v-col>
+          <v-text-field class="" label="I Gain" type="number" v-model="settings.pump_ki"></v-text-field>
+        </v-col>
+        <v-col>
+          <v-text-field class="" label="D Gain" type="number" v-model="settings.pump_kd"></v-text-field>
+        </v-col>
+      </v-row>
+      
       <v-card-subtitle>Extraction Control</v-card-subtitle>
-      <v-text-field class="mx-4" label="Extraction Mass" type="number" v-model="settings.m" suffix="g"></v-text-field>
+      <v-text-field class="mx-4" label="Extraction Mass" type="number" v-model="settings.mass_setpoint" suffix="g"></v-text-field>
 
       <v-card-subtitle>Update</v-card-subtitle>
       <v-row class="mx-1">
         <v-col>
           <v-text-field label="Sampling Interval" type="number" v-model="settings.t_sample" suffix="s"></v-text-field>
-        </v-col>
-        <v-col>
-          <v-text-field label="Update Interval" type="number" v-model="settings.t_update" suffix="s"></v-text-field>
         </v-col>
       </v-row>
 
@@ -73,7 +84,11 @@ export default {
       kp_types: [
         { text: 'On error', value: 1 },
         { text: 'On measurement', value: 0 }
-      ]
+      ],
+      profile_csv : {
+        profile_pressure_setpoints: '',
+        profile_time_setpoints: ''
+      }
     }
   },
   watch: {
@@ -93,7 +108,11 @@ export default {
       // Make sure all inputs are numbers
       const settings = {}
       Object.keys(this.settings).forEach((key, index) => {
-        settings[key] = this.settings[key]
+        if (key == profile_pressure_setpoints || key == profile_time_setpoints) {
+          settings[key] = this.profile_csv[key].split(',')
+        } else {
+          settings[key] = this.settings[key]
+        }
       })
 
       axios.put('/api/v1/settings/1/', settings)
@@ -111,6 +130,8 @@ export default {
         console.log(response.data)
         this.settingsServer = Object.assign({}, response.data)
         this.settings = Object.assign({}, response.data)
+        this.profile_time_csv = response.data.profile_time_setpoints.join(',')
+        this.profile_pressure_csv = response.data.profile_pressure_setpoints.join(',')
         this.saveUpToDate = true
       })
       .catch(error => console.log(error))

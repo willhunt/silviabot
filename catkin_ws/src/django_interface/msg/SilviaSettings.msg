@@ -13,8 +13,8 @@ uint16 t_clean_on
 uint16 t_clean_off
 uint16 n_clean_cycles
 
-float64[] pressure_setpoints
-float64[] pressure_t_setpoints
+float64[] profile_pressure_setpoints
+float64[] profile_time_setpoints
 float64 pump_kp
 float64 pump_kd
 float64 pump_ki

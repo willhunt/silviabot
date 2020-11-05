@@ -57,29 +57,11 @@ export default {
   },
 
   created () {
-    // Handle machine on/off globally
-    eventBus.$on('toggleOnOff', () => {
-      const axiosData = {
-        id: 1,
-        // on: this.machineOn,
-        // brew: this.machineBrewing
-        on: !this.machineOn,
-        brew: false
-      }
-
-      axios.put('/api/v1/status/1/', axiosData)
-        .then(response => {
-          console.log(response)
-          setTimeout(() => { eventBus.$emit('updateStatus') }, 1000)
-          // eventBus.$emit('updateStatus')
-        })
-        .catch(error => console.log(error))
-    })
-
     // Handle machine brew on/off globally
     eventBus.$on('toggleBrew', () => {
       const axiosData = {
         id: 1,
+        mode: -1,
         brew: !this.machineBrewing
       }
 
@@ -97,7 +79,6 @@ export default {
       const axiosData = {
         id: 1,
         brew: this.machineBrewing,
-        on: this.machineOn,
         mode: mode
       }
 
@@ -114,7 +95,6 @@ export default {
       axios.get('/api/v1/status/1/')
         .then(response => {
           console.log('Updating status')
-          this.machineOn = Boolean(response.data.on)
           this.machineBrewing = Boolean(response.data.brew)
           this.machineMode = Number(response.data.mode)
         })

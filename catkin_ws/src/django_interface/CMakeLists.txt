@@ -56,6 +56,8 @@ add_message_files(
   SilviaResponse.msg
   SilviaBrewTimer.msg
   SilviaStatus.msg
+  SilviaCleaner.msg
+  Mass.msg
 )
 
 ## Generate services in the 'srv' folder

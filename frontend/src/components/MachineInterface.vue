@@ -23,7 +23,7 @@
       </v-btn> -->
       <v-btn v-if="machineBrewing" id="brew-btn" class="" outlined text color="secondary">
         <v-col>
-          <v-row class="pb-1" justify="center">{{ m_current | temperatureDisplayFilter }}g</v-row>
+          <v-row class="pb-1" justify="center">{{ mass | temperatureDisplayFilter }}g</v-row>
           <v-row class="" justify="center">{{ t_elapsed }}s</v-row>
         </v-col>
       </v-btn>
@@ -69,11 +69,11 @@
     <div v-if="machineOn">
       <v-row align="center">
         <v-progress-linear :value="brewProgress" color="blue-grey" height="25" rounded>
-          <div v-if="m_current == null">
+          <div v-if="mass == null">
             No scale detected
           </div>
           <div v-else>
-            {{ m_current | temperatureDisplayFilter }}g / {{ m_setpoint }}g
+            {{ mass | temperatureDisplayFilter }}g / {{ mass_setpoint }}g
           </div>
         </v-progress-linear>
       </v-row>
@@ -116,17 +116,17 @@
         </v-col> -->
         <v-col cols="auto" class="px-1">
           <v-chip color="info">
-            <v-avatar left color="info darken-1">Kp</v-avatar>{{ Kp }}
+            <v-avatar left color="info darken-1">Kp</v-avatar>{{ heater_kp }}
           </v-chip>
         </v-col>
         <v-col cols="auto" class="px-1">
           <v-chip color="info">
-            <v-avatar left color="info darken-1">Ki</v-avatar>{{ Ki }}
+            <v-avatar left color="info darken-1">Ki</v-avatar>{{ heater_ki }}
           </v-chip>
         </v-col>
         <v-col cols="auto" class="px-1">
           <v-chip color="info">
-            <v-avatar left color="info darken-1">Kd</v-avatar>{{ Kd }}
+            <v-avatar left color="info darken-1">Kd</v-avatar>{{ heater_kd }}
           </v-chip>
         </v-col>
       </v-row>
@@ -152,20 +152,19 @@ export default {
   data: function () {
     return {
       temperature: 0,
-      displayOption: 'machine',
-      T_setpoint: 60,
-      intervalReference: null, // Varibale to hold setInterval for getting temperature,
-      t_update: 10,
-      m_current: null, // Brewed coffee mass (g)
-      m_setpoint: 20,
-      n_datapoints: 10,
-      low_water: false,
-      sessionData: null,
-      // watchedData: { watched: [] },
+      temperature_setpoint: 60,
+      mass: null, // Brewed coffee mass (g)
+      mass_setpoint: 20,
       dutyOverride: 100,
-      Kp: 0,
-      Ki: 0,
-      Kd: 0
+      heater_kp: 0,
+      heater_ki: 0,
+      heater_kd: 0,
+      low_water: false,
+      t_update: 10,
+      displayOption: 'machine',
+      intervalReference: null, // Varibale to hold setInterval for getting temperature,
+      n_datapoints: 10,
+      sessionData: null,
     }
   },
   props: {
@@ -175,13 +174,13 @@ export default {
   },
   computed: {
     tempBtnColor: function () {
-      if (Math.abs(this.T_setpoint - this.temperature) < 2) {
+      if (Math.abs(this.temperature_setpoint - this.temperature) < 2) {
         return 'success'
       }
       return 'secondary'
     },
     brewProgress: function () {
-      return 100 * this.m_current / this.m_setpoint
+      return 100 * this.mass / this.mass_setpoint
     },
     waterLevelColor: function () {
       return this.low_water ? 'error' : 'success'
@@ -199,13 +198,14 @@ export default {
       }
     },
     toggleOnOff () {
-      eventBus.$emit('toggleOnOff')
+      const mode = (this.machineMode === 0) ? 1 : 0
+      eventBus.$emit('toggleOnOff', mode)
     },
     toggleBrew () {
       eventBus.$emit('toggleBrew')
     },
     toggleOverride () {
-      const mode = this.machineMode === 0 ? 1 : 0
+      const mode = (this.machineMode === 0) ? 2 : 0
       eventBus.$emit('changeMode', mode)
     },
     toggleHeaterOn () {
@@ -230,16 +230,9 @@ export default {
     },
     toggleClean () {
       if (this.machineMode === 3) {
-        eventBus.$emit('changeMode', 1) // Manual
+        eventBus.$emit('changeMode', 2) // Manual
       } else {
         eventBus.$emit('changeMode', 3) // Clean
-      }
-    },
-    toggleAutoTune () {
-      if (this.machineMode === 2) {
-        eventBus.$emit('changeMode', 1) // Manual
-      } else {
-        eventBus.$emit('changeMode', 2) // Auto tune
       }
     },
     updateResponse () {
@@ -263,8 +256,8 @@ export default {
               return false
             }
             const lastResponse = latestSession[latestSession.length - 1]
-            this.temperature = lastResponse.T_boiler
-            this.m_current = lastResponse.m
+            this.temperature = lastResponse.temperature
+            this.mass = lastResponse.mass
             this.low_water = lastResponse.low_water
           })
           .catch(error => console.log(error))
@@ -279,13 +272,9 @@ export default {
             if (deltaTime > 15) {
               this.temperature = null
             } else {
-              this.temperature = response.data.T_boiler
+              this.temperature = response.data.temperature
             }
-            // this.watchedData.watched.push(response.data)
-            // while (this.watchedData.watched.length > this.n_datapoints) {
-            //   this.watchedData.watched.shift()
-            // }
-            this.m_current = response.data.m
+            this.mass = response.data.mass
             this.low_water = response.data.low_water
           })
           .catch(error => console.log(error))
@@ -295,12 +284,11 @@ export default {
     updateInterval () {
       axios.get('/api/v1/settings/1/')
         .then(response => {
-          this.t_update = response.data.t_update
-          this.m_setpoint = response.data.m
-          this.T_setpoint = response.data.T_set
-          this.Kp = response.data.k_p
-          this.Ki = response.data.k_i
-          this.Kd = response.data.k_d
+          this.mass_setpoint = response.data.mass
+          this.temperature_setpoint = response.data.temperature_setpoint
+          this.heater_kp = response.data.heater_kp
+          this.heater_ki = response.data.heater_ki
+          this.heater_kd = response.data.heater_kd
           this.intervalReference = setInterval(() => {
             this.updateResponse()
           }, 1000 * this.t_update)

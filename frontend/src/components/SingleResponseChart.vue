@@ -83,8 +83,8 @@ export default {
       headers: [
         { text: 'Time Stamp', value: 'ts' },
         { text: 'Time', value: 't' },
-        { text: 'Duty', value: 'duty' },
-        { text: 'Temperature', value: 'T_boiler' }
+        { text: 'Duty', value: 'heater_duty' },
+        { text: 'Temperature', value: 'temperature' }
       ]
     }
   },

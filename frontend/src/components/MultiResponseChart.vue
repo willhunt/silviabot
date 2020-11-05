@@ -71,10 +71,10 @@ export default {
   },
   computed: {
     graphDataT: function () {
-      return this.generateGraphData('T_boiler')
+      return this.generateGraphData('temperature')
     },
     graphDataD: function () {
-      return this.generateGraphData('duty')
+      return this.generateGraphData('heater_duty')
     }
   },
   methods: {

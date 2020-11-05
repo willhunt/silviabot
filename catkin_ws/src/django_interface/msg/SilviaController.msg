@@ -1,4 +1,5 @@
 std_msgs/Header header
+bool active
 float64 input
 float64 setpoint
 float64 output

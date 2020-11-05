@@ -1,0 +1,6 @@
+std_msgs/Header header
+uint16 t_clean_on
+uint16 t_clean_off
+uint16 n_clean_cycles
+uint16 current_cycle
+duration duration
