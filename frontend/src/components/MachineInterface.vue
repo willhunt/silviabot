@@ -31,7 +31,6 @@
     <br>
     <!-- Controls -->
     <v-row align="center">
-      <!-- <v-btn color="secondary" @click="toggleOnOff">{{ machineOn ? "On" : "Off" }}</v-btn> -->
       <v-col cols="auto">
         <v-switch color="secondary" value :input-value="machineOn" @change="toggleOnOff" :label="`${machineOn ? 'On' : 'Off'}`"></v-switch>
       </v-col>
@@ -199,7 +198,7 @@ export default {
     },
     toggleOnOff () {
       const mode = (this.machineMode === 0) ? 1 : 0
-      eventBus.$emit('toggleOnOff', mode)
+      eventBus.$emit('changeMode', mode)
     },
     toggleBrew () {
       eventBus.$emit('toggleBrew')
@@ -305,14 +304,14 @@ export default {
     }
   },
   created () {
-    this.updateInterval()
-    this.updateResponse()
+    // this.updateInterval()
+    // this.updateResponse()
     // Fire event to check on/off status
     eventBus.$emit('updateStatus')
   },
   destroyed () {
     // console.log('Cancel temperature update')
-    clearInterval(this.intervalReference)
+    // clearInterval(this.intervalReference)
   }
 }
 </script>

@@ -37,16 +37,19 @@
             ]
         },
         {
-            "name": "Python: Celery Worker(not set uo)",
+            "name": "Celery comms worker",
             "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}/silvia/",
+            "module": "celery",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}/silvia",
             "args": [
                 "-A",
                 "silvia",
                 "worker",
-                "-l",
-                "info"
+                "-c",
+                "1",
+                "--queues=comms"
             ]
         },
     ]

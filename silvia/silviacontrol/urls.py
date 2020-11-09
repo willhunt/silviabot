@@ -6,7 +6,6 @@ from . import views
 
 router = routers.DefaultRouter()
 router.register(r'settings', views.SettingsViewSet)
-router.register(r'status', views.StatusViewSet)
 router.register(r'response', views.ResponseViewSet, basename='response')
 router.register(r'session', views.SessionViewSet)
 router.register(r'schedule', views.ScheduleViewSet)
@@ -15,6 +14,7 @@ urlpatterns = [
     # Rest API routing
     url(r'^api/v1/', include(router.urls)),
     url(r'^api/v1/override', views.ManualControlView.as_view()),
+    url(r'^api/v1/status', views.StatusView.as_view()),
     url(r'^api-auth/', include('rest_framework.urls')),
     # Django routing
     path('easter/', views.index, name='index'),

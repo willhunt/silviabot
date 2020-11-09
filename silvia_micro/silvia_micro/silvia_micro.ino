@@ -25,6 +25,7 @@ Notes:
 // Imports  
 #include <ros.h>
 #include <Wire.h>
+#include <RBDdimmer.h>
 #include "silvia_sensors.h"
 #include "silvia_input.h"
 #include "silvia_output.h"
@@ -55,7 +56,8 @@ BrewTimer brew_timer = BrewTimer();
 
 // Controllers
 TemperatureController heater(&temperature_sensor.reading, HEAT_RELAY_PIN);
-PressureController pump(&pressure_sensor.reading, DIMMER_PIN);
+dimmerLamp dimmer = dimmerLamp(DIMMER_PIN);
+PressureController pump(&pressure_sensor.reading, &dimmer);
 
 // Switches
 PowerSwitch power_switch = PowerSwitch(POWER_SWITCH_PIN);
@@ -65,6 +67,8 @@ BrewSwitch brew_switch = BrewSwitch(BREW_SWITCH_PIN);
 SilviaDisplay display = SilviaDisplay(&Wire);
 
 void setup(void) {
+    dimmer.begin(NORMAL_MODE, ON);  // Stalls program if put later in setup (?)
+
     nh.getHardware()->setBaud(BAUDRATE);
     nh.initNode();
 
@@ -75,7 +79,7 @@ void setup(void) {
     heater.setup(&nh);
     heater.setSafetyLimit(0, SAFETY_TEMPERATURE);
     pump.setup(&nh);
-    pump.setSafetyLimit(0, SAFETY_PRESSURE);
+    pump.setSafetyLimit(-1, SAFETY_PRESSURE);
     cleaner.setup(&nh);
     silvia_status.setup(&nh);
 
@@ -108,7 +112,7 @@ void loop(void)  {
 
     pump.compute(brew_time);
     pump.controlOutput();
-    pump.publish();  // Causing issue...........
+    pump.publish();
 
     int cleaner_mode = cleaner.update();
     // Cleaner returns previous mode if finished

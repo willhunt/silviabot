@@ -16,7 +16,7 @@ void SilviaDisplay::setup(NodeHandle* nh) {
     nh->subscribe(mass_subscriber_);
 }
 
-void SilviaDisplay::massCallback(const django_interface::Mass& msg) {
+void SilviaDisplay::massCallback(const django_interface::SilviaMass& msg) {
     mass_ = msg.mass;
     t_mass_update_ = millis();
 }

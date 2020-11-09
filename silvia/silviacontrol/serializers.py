@@ -1,18 +1,11 @@
 from rest_framework import serializers
 from .models import (SettingsModel, ScheduleModel, SessionModel,
-                     StatusModel, ResponseModel)
+                     ResponseModel)
 
 class SettingsSerializer(serializers.ModelSerializer):
     class Meta:
         model = SettingsModel
         fields = '__all__'
-
-
-class StatusSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = StatusModel
-        fields = '__all__'
-
 
 class ResponseSerializer(serializers.ModelSerializer):
     response_time = serializers.ReadOnlyField()

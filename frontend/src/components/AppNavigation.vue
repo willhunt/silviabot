@@ -77,7 +77,12 @@ export default {
   },
   methods: {
     toggleOnOff () {
-      eventBus.$emit('toggleOnOff')
+      if(this.machineOn) {
+        eventBus.$emit('changeMode', 0)
+      } else {
+        eventBus.$emit('changeMode', 1)
+      }
+      
     }
   }
 }

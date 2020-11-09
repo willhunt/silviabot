@@ -57,15 +57,15 @@ add_message_files(
   SilviaBrewTimer.msg
   SilviaStatus.msg
   SilviaCleaner.msg
-  Mass.msg
+  SilviaMass.msg
 )
 
 ## Generate services in the 'srv' folder
-# add_service_files(
-#   FILES
-#   Service1.srv
-#   Service2.srv
-# )
+add_service_files(
+  FILES
+  SilviaStatusRequest.srv
+  SilviaStatusChange.srv
+)
 
 ## Generate actions in the 'action' folder
 # add_action_files(
@@ -168,6 +168,7 @@ include_directories(
 ## in contrast to setup.py, you can choose the destination
 catkin_install_python(PROGRAMS
   scripts/django_interface_node.py
+  scripts/status_server_node.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

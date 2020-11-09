@@ -93,7 +93,7 @@ def save_settings(sender, instance, raw, using, update_fields, **kwargs):
     """
     When updating settings publish
     """
-    async_ros_settings.delay()
+    async_ros_set_settings.delay()
 
 @receiver(post_save, sender=ResponseModel)
 def save_response(sender, instance, raw, using, update_fields, **kwargs):

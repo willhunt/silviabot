@@ -5,7 +5,8 @@
 
 SilviaStatus::SilviaStatus() 
     : SilviaPublisher("status", &status_report_msg_, PUB_STATUS_INTERVAL)
-    , status_subscriber_("status_request", &SilviaStatus::statusRequestCallback, this)
+    , status_subscriber_("status_change", &SilviaStatus::statusChangeCallback, this)
+    , status_change_server_("status_change_srv", &SilviaStatus::statusChangeSrvCallback, this)
     , settings_subscriber_("settings", &SilviaStatus::setSettingsCallback, this)
     , mode_(MODE_OFF)
 {
@@ -24,11 +25,17 @@ void SilviaStatus::populateMessage() {
     status_report_msg_.brew = getBrew();
 }
 
-void SilviaStatus::statusRequestCallback(const django_interface::SilviaStatus& msg) {
+void SilviaStatus::statusChangeCallback(const django_interface::SilviaStatus& msg) {
     if (msg.mode == MODE_OFF) changeBrew(false);  // Deal with brew first if machine is being turned off
     if (msg.mode != MODE_IGNORE) changeMode(msg.mode);
     if (msg.mode != MODE_OFF) changeBrew(msg.brew);
     publish(true);  // Force publish
+}
+
+void SilviaStatus::statusChangeSrvCallback(const StatusChangeRequest& request, StatusChangeResponse& response) {
+    statusChangeCallback(request.status);
+    response.status.mode = mode_;
+    response.status.brew = getBrew();
 }
 
 void SilviaStatus::setSettingsCallback(const django_interface::SilviaSettings& msg) {
@@ -41,6 +48,7 @@ void SilviaStatus::changeMode(int new_mode) {
     // Check if changing out of a mode (turn things off)
     if (new_mode != MODE_PID && mode_ == MODE_PID) {
         heater.deactivate();
+        heater.setDuty(0);
     } else if (new_mode != MODE_MANUAL && mode_ == MODE_MANUAL) {
         heater.setOutput(0);
     } else if (new_mode != MODE_CLEAN && mode_ == MODE_CLEAN) {
@@ -78,9 +86,13 @@ void SilviaStatus::changeBrew(bool brew) {
                 changeMode(MODE_MANUAL);
                 heater.temporaryOverride(true, 100);
             }
+            pump.enableOutput();
+            if (mode_ == MODE_PID) pump.activate();
         }
     } else {
         brew_output.off();
+        pump.disableOutput();
+        pump.deactivate();
         if (heater.getTemporaryOverride()) {
             changeMode(MODE_PID);
             heater.temporaryOverride(false, 0);

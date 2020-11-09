@@ -10,5 +10,9 @@
     </group>
 
     <!-- <node name="django_interface_node" pkg="django_interface" type="django_interface_node.py" /> -->
+
+    <node name="status_server_node" pkg="django_interface" type="status_server_node.py" />
+
+    <include file="$(find rosbridge_server)/launch/rosbridge_websocket.launch" />
     
 </launch>

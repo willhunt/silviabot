@@ -19,19 +19,17 @@ class SettingsModel(models.Model):
     heater_kp = models.FloatField(default=0)  # Proportional gain
     heater_kd = models.FloatField(default=0)  # Derivative gain
     heater_ki = models.FloatField(default=0)  # Integral gain
-    heater_kp_mode = models.IntegerField(default=1)  # Proportional or error=1, on measurement=0
     # Scale
     mass_setpoint = models.FloatField(default=20)  # Extraction mass [g]
     # Sampling times
-    t_update = models.IntegerField(default=5)  # Time delay between client side updates [s]
     t_sample = models.IntegerField(default=5)  # Time delay between server side sampling [s]
     # Cleaning
     t_clean_on = models.IntegerField(default=10)  # Time to turn pump on for during cleaning cycle [s]
     t_clean_off = models.IntegerField(default=50)  # Time to turn pump off for during cleaning cycle [s]
     n_clean_cycles = models.IntegerField(default=5)  # Number of on/off cycles [-]
     # Pressure profile
-    pressure_setpoints = ArrayField(models.FloatField(default=get_default_pressure_profile))  # Pressure profile
-    pressure_t_setpoints = ArrayField(models.FloatField(default=get_default_time_profile))  # Time profile (for pressure profile)
+    profile_pressure_setpoints = ArrayField(models.FloatField(default=get_default_pressure_profile))  # Pressure profile
+    profile_time_setpoints = ArrayField(models.FloatField(default=get_default_time_profile))  # Time profile (for pressure profile)
     pump_kp = models.FloatField(default=0)  # Proportional gain
     pump_kd = models.FloatField(default=0)  # Derivative gain
     pump_ki = models.FloatField(default=0)  # Integral gain
@@ -82,22 +80,22 @@ class ResponseModel(models.Model):
     """
     t = models.DateTimeField(auto_now=True)
     mode = models.IntegerField(default=0)
-    brewing = models.BooleanField(default=False)
-    low_water = models.BooleanField(default=False)
+    brew = models.BooleanField(default=False)
+    low_water = models.BooleanField(blank=True, null=True)
     
-    temperature = models.FloatField()
+    temperature = models.FloatField(blank=True, null=True)
     temperature_setpoint = models.FloatField(blank=True, null=True)
-    heater_duty = models.FloatField(default=0)
+    heater_duty = models.FloatField(blank=True, null=True)
     heater_kp = models.FloatField(blank=True, null=True)
     heater_ki = models.FloatField(blank=True, null=True)   
     heater_kd = models.FloatField(blank=True, null=True)
 
-    mass = models.FloatField(default=0, null=True)
+    mass = models.FloatField(blank=True, null=True)
     mass_setpoint = models.FloatField(default=0, null=True)
 
     pressure = models.FloatField(blank=True, null=True)
     pressure_setpoint = models.FloatField(blank=True, null=True)
-    pump_duty = models.FloatField(default=0)
+    pump_duty = models.FloatField(blank=True, null=True)
     pump_kp = models.FloatField(blank=True, null=True)
     pump_ki = models.FloatField(blank=True, null=True)   
     pump_kd = models.FloatField(blank=True, null=True)

@@ -44,21 +44,27 @@ PID controller for pump pressure
 */
 class PressureController : public PidController, public  SilviaPublisher {
     private:
-        int dimmer_pin_;
-        dimmerLamp dimmer_;
+        // int dimmer_pin_;
+        // dimmerLamp dimmer_;
+        dimmerLamp* dimmer_;
         unsigned long t_profile_[PROFILE_STEPS];
         double pressure_profile_[PROFILE_STEPS];
         django_interface::SilviaController msg_;
+        ros::Subscriber<std_msgs::Float64, PressureController> override_subscriber_;
+        void overrideCallback(const std_msgs::Float64& msg);
         void setProfile(unsigned long t_profile_[], double pressure_profile_[]);
         void populateMessage();
 
     public:
-        PressureController(double* input, int relay_pin);
-        // void setup(NodeHandle* nh);
+        // PressureController(double* input, int relay_pin);
+        PressureController(double* input, dimmerLamp* dimmer);
+        void setup(NodeHandle* nh);
         void controlOutput();
         int getDimmerPin();
         double getProfilePressure(unsigned long t);
-        void deactivate();
+        void enableOutput();
+        void disableOutput();
+        // void deactivate();
         void compute(unsigned long t);
         void setSettingsCallback(const django_interface::SilviaSettings& msg);
 };

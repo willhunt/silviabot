@@ -10,7 +10,7 @@
 #include <django_interface/SilviaStatus.h>
 #include <django_interface/SilviaBrewTimer.h>
 #include <django_interface/SilviaCleaner.h>
-#include <django_interface/Mass.h>
+#include <django_interface/SilviaMass.h>
 #include "silvia_logo.h"
 #include "silvia_state.h"
 #include "silvia_sensors.h"
@@ -36,7 +36,7 @@ extern BrewTimer brew_timer;
 class SilviaDisplay : public Adafruit_SSD1306 {
     private:
         NodeHandle* nh_;
-        ros::Subscriber<django_interface::Mass, SilviaDisplay> mass_subscriber_;
+        ros::Subscriber<django_interface::SilviaMass, SilviaDisplay> mass_subscriber_;
         unsigned long t_power_on_;  // Time machine was last turned on
         bool power_status_last_update_;  // Power status recorded last update
         unsigned long t_last_update_;
@@ -46,7 +46,7 @@ class SilviaDisplay : public Adafruit_SSD1306 {
         void drawCentreString(const char *buffer, int x, int y);
         void formatPressureString(char* buffer, double pressure);
         void drawPressureString(char* buffer, double pressure, int x, int y, int size);
-        void massCallback(const django_interface::Mass& msg);
+        void massCallback(const django_interface::SilviaMass& msg);
 
     public:
         SilviaDisplay(TwoWire* wire);

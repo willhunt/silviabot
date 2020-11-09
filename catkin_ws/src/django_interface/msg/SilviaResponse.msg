@@ -3,6 +3,5 @@ std_msgs/Header header
 django_interface/SilviaStatus status
 django_interface/SilviaController pump_control
 django_interface/SilviaController heater_control
-float64 mass
-float64 mass_setpoint
-bool low_water
+django_interface/SilviaMass mass
+django_interface/SilviaWater water

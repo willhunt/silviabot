@@ -85,15 +85,17 @@ void TemperatureController::populateMessage() {
 }
 
 // PRESSURE CONTROLLER ----------------------------------------------------
-PressureController::PressureController(double* input, int dimmer_pin)
+// PressureController::PressureController(double* input, int dimmer_pin)
+PressureController::PressureController(double* input, dimmerLamp* dimmer)
     : PidController(input)
     , SilviaPublisher("pump_controller", &msg_, PUB_CONTROLLER_INTERVAL)
-    , dimmer_pin_(dimmer_pin)
-    , dimmer_(dimmer_pin)
+    , override_subscriber_("pump_duty", &PressureController::overrideCallback, this)
+    // , dimmer_pin_(dimmer_pin)
+    // , dimmer_(dimmer_pin)
 {
     setSetpoint(9e5);
-    pinMode(dimmer_pin_, OUTPUT);
-    setOutputLimits(0, 100);
+    // pinMode(dimmer_pin_, OUTPUT);
+    setOutputLimits(0, 98);
     setUpdateInterval(200);
     msg_.header.frame_id = "micro";
      // Fill default profile values
@@ -101,20 +103,39 @@ PressureController::PressureController(double* input, int dimmer_pin)
         t_profile_[i] = i * 5000;
         pressure_profile_[i] = 9e5;
     }
+    dimmer_ = dimmer;
+}
+
+void PressureController::setup(NodeHandle* nh) {
+    nh->subscribe(override_subscriber_);
+    SilviaPublisher::setup(nh);
+    // dimmer_.begin(NORMAL_MODE, ON);
 }
 
 void PressureController::controlOutput() {
-    dimmer_.setPower(output_);
+    // dimmer_.setPower(output_);
+    if (output_ <= 0) {
+        dimmer_->setState(OFF);
+    } else {
+        if (dimmer_->getState() == OFF) dimmer_->setState(ON);
+        dimmer_->setPower(output_);
+    }
 }
 
-int PressureController::getDimmerPin() {
-    return dimmer_pin_;
+// int PressureController::getDimmerPin() {
+//     return dimmer_pin_;
+// }
+
+void PressureController::enableOutput() {
+    // dimmer_.setState(ON);
+}
+void PressureController::disableOutput() {
+    // dimmer_.setState(OFF);
 }
 
-void PressureController::deactivate() {
-    PidController::deactivate();
-    dimmer_.setState(OFF);
-}
+// void PressureController::deactivate() {
+//     PidController::deactivate();
+// }
 
 /*
     Get pressure at time t based upon given profile
@@ -182,4 +203,8 @@ void PressureController::populateMessage() {
     msg_.ki = ki_;
     msg_.kd = kd_;
     msg_.active = active_;
+}
+
+void PressureController::overrideCallback(const std_msgs::Float64& msg){
+    setOutput((double)msg.data);
 }

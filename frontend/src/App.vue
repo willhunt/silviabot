@@ -45,7 +45,13 @@ export default {
     return {
       machineOn: false,
       machineBrewing: false,
-      machineMode: 0
+      machineMode: 0,
+      // Modes
+      MODE_IGNORE: -1,
+      MODE_OFF: 0,
+      MODE_PID: 1,
+      MODE_MANUAL: 2,
+      MODE_CLEAN: 3
     }
   },
 
@@ -61,14 +67,14 @@ export default {
     eventBus.$on('toggleBrew', () => {
       const axiosData = {
         id: 1,
-        mode: -1,
+        mode: this.MODE_IGNORE,
         brew: !this.machineBrewing
       }
 
       axios.put('/api/v1/status/1/', axiosData)
         .then(response => {
           console.log(response)
-          setTimeout(() => { eventBus.$emit('updateStatus') }, 1000)
+          // setTimeout(() => { eventBus.$emit('updateStatus') }, 1000)
           // eventBus.$emit('updateStatus')
         })
         .catch(error => console.log(error))
@@ -85,7 +91,7 @@ export default {
       axios.put('/api/v1/status/1/', axiosData)
         .then(response => {
           console.log(response)
-          setTimeout(() => { eventBus.$emit('updateStatus') }, 1000)
+          // setTimeout(() => { eventBus.$emit('updateStatus') }, 1000)
           // eventBus.$emit('updateStatus')
         })
         .catch(error => console.log(error))
@@ -97,6 +103,7 @@ export default {
           console.log('Updating status')
           this.machineBrewing = Boolean(response.data.brew)
           this.machineMode = Number(response.data.mode)
+          this.machineOn = (response.data.mode == this.MODE_OFF) ? false : true 
         })
         .catch(error => console.log(error))
     })

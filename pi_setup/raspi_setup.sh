@@ -1,10 +1,12 @@
 #!/bin/sh
 
+sudo -i
+
 # Update
 printf "Updating linux...  "
-sudo apt-get update -y
-sudo apt-get upgrade -y
-sudo apt-get autoremove
+apt-get update -y
+apt-get upgrade -y
+apt-get autoremove
 
 # Hostname (used to detect simulation mode in Django)
 sudo hostnamectl set-hostname silvia
@@ -16,20 +18,69 @@ chmod +x ~/silvia/update.sh
 chmod +x ~/silvia/update_branch.sh
 chmod +x ~/silvia/update_arduino.sh
 
+# Install ROS
+# Allow restricted, universe, and multiverse repositories
+sudo add-apt-repository universe
+sudo add-apt-repository restricted
+sudo add-apt-repository multiverse
+# Setup sources
+printf "Adding repositories..."
+sudo sh -c 'echo "deb [trusted=yes] http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'
+sudo apt-key adv --keyserver 'hkp://keyserver.ubuntu.com:80' --recv-key C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654
+sudo apt update
+printf "Installing ROS..."
+sudo apt install ros-noetic-ros-base python-rosdep gdb -y
+printf "Setup rosdep..."
+cd ~/ottobot/catkin_ws
+rosdep init
+rosdep update
+rosdep install --from-paths src --ignore-src -r -y
+
+# Modify bash.rc to source required files
+echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc
+echo "source ~/ottobot/catkin_ws/devel/setup.bash" >> ~/.bashrc
+
 # Install stuff
 printf "Installing linux packages...  "
-sudo apt install git python3-pip python3-venv libopenjp2-7 libtiff5 apache2 apache2-dev libapache2-mod-wsgi-py3 redis-server i2c-tools sshfs postgresql libpq-dev postgresql-client postgresql-client-common python-dev -y
+apt install git python3-pip python3-venv libopenjp2-7 libtiff5 apache2 apache2-dev libapache2-mod-wsgi-py3 redis-server i2c-tools sshfs postgresql libpq-dev postgresql-client postgresql-client-common python-dev -y
 
 # Static IP - add lines to file
 printf "Setting up static IP...  "
-cat >> /etc/dhcpcd.conf <<EOL
+# cat >> /etc/dhcpcd.conf <<EOL
 
-# Setup static IP
-interface wlan0
-static ip_address=192.168.0.6/24
-static routers=192.168.0.1
-static domain_name_servers=192.168.0.1
+# # Setup static IP
+# interface wlan0
+# static ip_address=192.168.0.6/24
+# static routers=192.168.0.1
+# static domain_name_servers=192.168.0.1
+# EOL
+
+# sudo touch /etc/cloud/cloud.cfg.d/99-disable-network-config.cfg
+echo "network: {config: disabled}" > /etc/cloud/cloud.cfg.d/99-disable-network-config.cfg
+
+rm /etc/netplan/50-cloud-init.yaml
+touch /etc/netplan/50-cloud-init.yaml
+cat >> /etc/netplan/50-cloud-init.yaml <<EOL
+network:
+  version: 2
+  renderer: networkd
+  ethernets:
+    eth0:
+      dhcp4: true
+      optional: true
+  wifis:
+    wlan0:
+      access-points:
+        VM369865-2G:
+          password: zsrannnx
+      dhcp4: no
+      addresses: [192.168.0.6/24]
+      gateway4: 192.168.0.1
+      nameservers:
+        addresses: [192.168.0.1, 8.8.8.8]
+      optional: true
 EOL
+netplan apply
 
 # Python env
 printf "Setting up Python environment...  "
@@ -44,41 +95,30 @@ printf "Setting up Apache server...  "
 cd ~/silvia/pi_setup/
 cp -f 000-default.conf /etc/apache2/sites-available/000-default.conf
 # Change permissions
-sudo chmod g+w ~/silvia/silvia
+chmod g+w ~/silvia/silvia
 # Change owner
-sudo chown www-data:www-data ~/silvia/silvia
-sudo chown www-data:www-data ~/.virtualenvs/venv-silvia
+chown www-data:www-data ~/silvia/silvia
+chown www-data:www-data ~/.virtualenvs/venv-silvia
 # Change group
-sudo groupadd server_group
-sudo adduser pi server_group
-sudo adduser www-data server_group
-sudo adduser www-data dialout
-sudo chgrp server_group ~/silvia/silvia/
-
-# I2C Permissions
-######### NOT SURE IF THIS NEEDS TO BE DONE
-# sudo nano /etc/udev/rules.d/99-com.rules
-# SUBSYSTEM=="ic2-dev", GROUP="i2c", MODE="0666"
-
-# I2C
-printf "Setting up I2C...  "
-sudo adduser pi i2c
-sudo adduser www-data i2c
+groupadd server_group
+adduser ubuntu server_group
+adduser www-data server_group
+adduser www-data dialout
+chgrp server_group ~/silvia/silvia/
 
 # Arduino
 printf "Setting up Arduino CLI...  "
 cd ~
 curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | sh
-echo "export PATH=\$PATH:/home/pi/bin" >> ~/.bashrc
-export PATH=$PATH:/home/pi/bin
+echo "export PATH=\$PATH:/home/ubuntu/bin" >> ~/.bashrc
+export PATH=$PATH:/home/ubuntu/bin
 arduino-cli config init
 arduino-cli core update-index
 arduino-cli core install arduino:avr
 arduino-cli lib install PID "Adafruit SSD1306" "Adafruit GFX"
 cd ~/Arduino/libraries
-git clone https://github.com/br3ttb/Arduino-PID-AutoTune-Library.git
-mv Arduino-PID-AutoTune-Library/PID_AutoTune_v0 .
-sudo rm -r Arduino-PID-AutoTune-Library/
+git clone https://github.com/RobotDynOfficial/RBDDimmer.git
+
 
 # Postgres
 printf "Setting up PostgreSQL...  "

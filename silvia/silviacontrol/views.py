@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from .models import (SettingsModel, SessionModel,
                         ResponseModel, ScheduleModel)
-from .serializers import (SettingsSerializer, StatusSerializer, SessionSerializer,
+from .serializers import (SettingsSerializer, SessionSerializer,
                             ResponseSerializer, ScheduleSerializer)
 from .utils import debug_log
 import json
@@ -141,12 +141,15 @@ class StatusView(views.APIView):
         """
         debug_log("Machine status GET request")
         status_response = sync_ros_get_status()
-        return Response(status_response)
+        return Response(status_response["status"])
 
     def put(self, request, format=None):
         """
         Set machine status
         """
         debug_log("Machine status PUT request")
-        async_ros_set_status.delay()
+        async_ros_set_status.delay(
+            mode=request.data.get('mode', -1),
+            brew=request.data.get('brew', False)
+        )
         return Response()
