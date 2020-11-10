@@ -11,7 +11,7 @@ from .serializers import (SettingsSerializer, SessionSerializer,
                             ResponseSerializer, ScheduleSerializer)
 from .utils import debug_log
 import json
-from .tasks import async_ros_set_heater, sync_ros_get_status, async_ros_set_status
+from .tasks import ros_set_heater, ros_get_status, ros_set_status
 
 # Html Views -----------
 def index(request):
@@ -122,7 +122,7 @@ class ManualControlView(views.APIView):
         """
         debug_log("Manual control GET request")
         duty = float(self.request.query_params.get('duty', 0))
-        async_ros_set_heater.delay(duty=duty)
+        ros_set_heater(duty=duty)
         return Response({"duty": duty})
 
 def string2bool(input_string):
@@ -140,7 +140,7 @@ class StatusView(views.APIView):
         Get machine status
         """
         debug_log("Machine status GET request")
-        status_response = sync_ros_get_status()
+        status_response = ros_get_status()
         return Response(status_response["status"])
 
     def put(self, request, format=None):
@@ -148,7 +148,7 @@ class StatusView(views.APIView):
         Set machine status
         """
         debug_log("Machine status PUT request")
-        async_ros_set_status.delay(
+        ros_set_status(
             mode=request.data.get('mode', -1),
             brew=request.data.get('brew', False)
         )

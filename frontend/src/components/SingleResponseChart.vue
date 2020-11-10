@@ -58,7 +58,8 @@ export default {
             ticks: {
               beginAtZero: true,
               suggestedMin: 0,
-              suggestedMax: 110
+              suggestedMax: 110,
+              fontColor: '#ff5a5f'
             }
           },
           {
@@ -71,7 +72,22 @@ export default {
             },
             ticks: {
               suggestedMin: 0,
-              suggestedMax: 30
+              suggestedMax: 30,
+              fontColor: '#7fd1b9'
+            }
+          },
+          {
+            id: 'pressure-axis',
+            position: 'right',
+            display: true,
+            scaleLabel: {
+              display: true,
+              labelString: 'Pressure (bar)'
+            },
+            ticks: {
+              suggestedMin: 0,
+              suggestedMax: 10,
+              fontColor: '#769fb6'
             }
           }]
         },
@@ -105,25 +121,64 @@ export default {
           showLine: true,
           data: [],
           fill: false,
-          borderColor: '#ff5a5f'
+          borderColor: '#ff5a5f',
+          pointRadius: 0
         }
-        const datasetD = {
-          label: 'Duty',
+        const datasetTS = {
+          label: 'Temperature Setpoint',
           xAxisID: 'time-axis',
           yAxisID: 'temperature-axis',
           showLine: true,
           data: [],
           fill: false,
-          borderColor: '#eabe7c'
+          borderColor: '#ff5a5f',
+          pointRadius: 0,
+          borderDash: [5,5]
         }
-        const datasetS = {
-          label: 'Setpoint',
+        const datasetTD = {
+          label: 'Temperature Duty',
           xAxisID: 'time-axis',
           yAxisID: 'temperature-axis',
           showLine: true,
+          borderWidth: 1,
+          data: [],
+          fill: true,
+          borderColor: '#ff5a5f', //#eabe7c
+          backgroundColor: "rgba(255, 90, 95, 0.1)", //'#ff5a5f'
+          pointRadius: 0
+        }
+        const datasetP = {
+          label: 'Pressure',
+          xAxisID: 'time-axis',
+          yAxisID: 'pressure-axis',
+          showLine: true,
           data: [],
           fill: false,
-          borderColor: '#769fb6'
+          borderColor: '#769fb6',
+          pointRadius: 0
+        }
+        const datasetPS = {
+          label: 'Pressure Setpoint',
+          xAxisID: 'time-axis',
+          yAxisID: 'pressure-axis',
+          showLine: true,
+          data: [],
+          fill: false,
+          borderColor: '#769fb6',
+          pointRadius: 0,
+          borderDash: [5,5]
+        }
+        const datasetPD = {
+          label: 'Pressure Duty',
+          xAxisID: 'time-axis',
+          yAxisID: 'pressure-axis',
+          showLine: true,
+          borderWidth: 1,
+          data: [],
+          fill: true,
+          borderColor: '#769fb6', //#eabe7c
+          backgroundColor: "rgba(118, 159, 182, 0.1)",
+          pointRadius: 0
         }
         const datasetM = {
           label: 'Extraction',
@@ -141,15 +196,27 @@ export default {
           const xPoint = (new Date(responseItem.t) - xPoint0) / 1000
           datasetT.data.push({
             x: xPoint,
-            y: responseItem.T_boiler
+            y: responseItem.temperature
           })
-          datasetD.data.push({
+          datasetTS.data.push({
             x: xPoint,
-            y: responseItem.duty
+            y: responseItem.temperature_setpoint
           })
-          datasetS.data.push({
+          datasetTD.data.push({
             x: xPoint,
-            y: responseItem.T_setpoint
+            y: responseItem.heater_duty
+          })
+          datasetP.data.push({
+            x: xPoint,
+            y: responseItem.pressure
+          })
+          datasetPS.data.push({
+            x: xPoint,
+            y: responseItem.pressure_setpoint
+          })
+          datasetPD.data.push({
+            x: xPoint,
+            y: responseItem.pressure_duty
           })
           datasetM.data.push({
             x: xPoint,
@@ -157,8 +224,11 @@ export default {
           })
         })
         graphData.datasets.push(datasetT)
-        graphData.datasets.push(datasetD)
-        graphData.datasets.push(datasetS)
+        graphData.datasets.push(datasetTS)
+        graphData.datasets.push(datasetTD)
+        graphData.datasets.push(datasetP)
+        graphData.datasets.push(datasetPS)
+        graphData.datasets.push(datasetPD)
         graphData.datasets.push(datasetM)
       }
       return graphData
@@ -171,8 +241,8 @@ export default {
         tableData.push({
           ts: responseItem.t,
           t: (new Date(responseItem.t) - t0) / 1000,
-          duty: responseItem.duty,
-          T_boiler: responseItem.T_boiler
+          heater_duty: responseItem.heater_duty,
+          temperature: responseItem.temperature
         })
       })
       return tableData

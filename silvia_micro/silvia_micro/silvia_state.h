@@ -1,7 +1,7 @@
 #ifndef SILVIA_FUNCTION_H
 #define SILVIA_FUNCTION_H
 
-#define PUB_STATUS_INTERVAL 200
+#define PUB_STATUS_INTERVAL 5000
 
 #include <Arduino.h>
 #include <django_interface/SilviaStatus.h>

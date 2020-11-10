@@ -20,7 +20,16 @@
 import axios from 'axios'
 // import { axiosApi } from '@/api'
 import { eventBus } from '@/main'
+import { ros } from '@/ros'
 import AppNaviagtion from './components/AppNavigation'
+import ROSLIB from 'roslib'
+
+// Subscribers
+var status_listener = new ROSLIB.Topic({
+  ros : ros,
+  name : '/status',
+  messageType : 'django_interface/SilviaStatus'
+});
 
 axios.defaults.xsrfCookieName = 'csrftoken'
 axios.defaults.xsrfHeaderName = 'X-CSRFToken'
@@ -63,6 +72,13 @@ export default {
   },
 
   created () {
+    status_listener.subscribe((message) => {
+      console.log('Received message on ' + status_listener.name + ': ' + message.mode);
+      this.machineBrewing = Boolean(message.brew)
+      this.machineMode = Number(message.mode)
+      this.machineOn = (message.mode == this.MODE_OFF) ? false : true 
+    });
+
     // Handle machine brew on/off globally
     eventBus.$on('toggleBrew', () => {
       const axiosData = {

@@ -13,13 +13,13 @@ import time
 client = roslibpy.Ros(host='localhost', port=9090)
 client.run()
 # Status
-status_publisher = roslibpy.Topic(client, '/status_change', 'django_interface/SilviaStatus', latch=True)
+status_publisher = roslibpy.Topic(client, '/status_change', 'django_interface/SilviaStatus', latch=False)
 status_service = roslibpy.Service(client, '/status_request', '/status')
 status_request = roslibpy.ServiceRequest()
 # Override
-heater_duty_publisher = roslibpy.Topic(client, '/heater_duty_request', 'django_interface/SilviaHeaterDuty')
+heater_duty_publisher = roslibpy.Topic(client, '/heater_duty_request', 'django_interface/SilviaHeaterDuty', latch=False)
 # Settings
-settings_publisher = roslibpy.Topic(client, '/settings', 'django_interface/SilviaStatus')
+settings_publisher = roslibpy.Topic(client, '/settings', 'django_interface/SilviaStatus', latch=False)
 
 @shared_task(queue='comms')
 def async_scale_update(brew, mass_setpoint):
@@ -47,28 +47,42 @@ def async_scale_update(brew, mass_setpoint):
 @shared_task(queue='comms')
 def async_ros_set_status(mode=-1, brew=None):
     """
+    Send status update via ROS through celery
+    """
+    local_client = roslibpy.Ros(host='localhost', port=9090)
+    local_client.run()
+    local_status_publisher = roslibpy.Topic(local_client, '/status_change', 'django_interface/SilviaStatus', latch=True)
+    msg_content = {"mode": mode}
+    if brew is not None:
+        msg_content["brew"] = brew
+    local_status_publisher.publish(roslibpy.Message(msg_content))
+    local_status_publisher.unadvertise()
+    local_client.terminate()
+    debug_log("Status change requested via async call: Mode={}, Brew={}".format(mode, brew))
+ 
+@shared_task(queue='celery')
+def async_save_response(response_dict):
+    ResponseModel.objects.create(**response_dict)
+
+def ros_get_status():
+    """
+    Get status from ROS
+    """
+    status_response = status_service.call(status_request)
+    return status_response
+    
+def ros_set_status(mode=-1, brew=None):
+    """
     Send status update via ROS
     """
     msg_content = {"mode": mode}
     if brew is not None:
         msg_content["brew"] = brew
-        status_publisher.
-    status_publisher.publish(roslibpy.Message(msg_content))
-    debug_log("Status change requested via async call: Mode={}, Brew={}".format(mode, brew))
     debug_log("Advertised? {}".format(status_publisher.is_advertised))
-    
+    status_publisher.publish(roslibpy.Message(msg_content))
+    debug_log("Status change requested via sync call: Mode={}, Brew={}".format(mode, brew))
 
-@shared_task(queue='comms')
-def async_ros_set_settings():
-    """
-    Send settings update via ROS
-    """
-    settings = SettingsModel.objects.get(pk=1)
-    msg = roslibpy.Message(settings.__dict__)
-    status_publisher.publish(msg)
-
-@shared_task(queue='comms')
-def async_ros_set_heater(duty=0):
+def ros_set_heater(duty=0):
     """
     Control override/manual mode of arduino
     """
@@ -77,15 +91,12 @@ def async_ros_set_heater(duty=0):
     })
     heater_duty_publisher.publish(msg)
     debug_log("Heater duty request via async call: Duty={}".format(duty))
- 
-@shared_task(queue='celery')
-def async_save_response(response_dict):
-    ResponseModel.objects.create(**response_dict)
 
-def sync_ros_get_status():
+def ros_set_settings(settings=None):
     """
-    Get status from ROS
+    Send settings update via ROS
     """
-    status_response = status_service.call(status_request)
-    return status_response
-    
+    if settings is None:
+        settings = SettingsModel.objects.get(pk=1)
+    msg = roslibpy.Message(settings.__dict__)
+    status_publisher.publish(msg)

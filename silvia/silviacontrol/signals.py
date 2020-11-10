@@ -1,7 +1,7 @@
 from django.db.models.signals import pre_save, post_delete, post_save
 from django.dispatch import receiver
 from django.conf import settings as django_settings
-from .tasks import async_ros_set_settings
+from .tasks import ros_set_settings
 from .models import ScheduleModel, ResponseModel, SettingsModel, SessionModel
 from django_celery_beat.models import CrontabSchedule, PeriodicTask, IntervalSchedule
 
@@ -93,7 +93,7 @@ def save_settings(sender, instance, raw, using, update_fields, **kwargs):
     """
     When updating settings publish
     """
-    async_ros_set_settings.delay()
+    ros_set_settings(instance)
 
 @receiver(post_save, sender=ResponseModel)
 def save_response(sender, instance, raw, using, update_fields, **kwargs):

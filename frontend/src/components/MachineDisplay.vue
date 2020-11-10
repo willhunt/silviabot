@@ -7,7 +7,14 @@
     <div v-else>
       <v-img class="machine-image img-center" min-width="150" max-width="350" src="@/assets/Silvia_Illustration_off.png" contain />
     </div>
-
+    <v-btn id="temp-btn" outlined :color="tempBtnColor">
+      <div v-if="temperature == null">-</div>
+      <div v-else>{{ temperature | temperatureDisplayFilter }} &#8451;</div>
+    </v-btn>
+    <v-btn id="pressure-btn" outlined color="secondary">
+      <div v-if="pressure == null">-</div>
+      <div v-else>{{ pressure | temperatureDisplayFilter }} bar</div>
+    </v-btn>
   </div>
 </template>
 
@@ -16,7 +23,17 @@ export default {
   name: 'MachineDisplay',
   props: {
     machineOn: Boolean,
-    temperature: Number
+    temperature: Number,
+    temperature_setpoint: Number,
+    pressure: Number
+  },
+  computed: {
+    tempBtnColor: function () {
+      if (Math.abs(this.temperature_setpoint - this.temperature) < 1) {
+        return 'success'
+      }
+      return 'secondary'
+    }
   }
 }
 </script>
@@ -35,4 +52,22 @@ export default {
 /* .machine-image {
     height: 500px;
 } */
+
+#temp-btn {
+  position: absolute;
+  top: 24%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  -ms-transform: translate(-50%, -50%);
+  background-color: rgb(236, 236, 236);
+}
+#pressure-btn {
+  position: absolute;
+  top: 33%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  -ms-transform: translate(-50%, -50%);
+  background-color: rgb(236, 236, 236);
+  text-transform: none;
+}
 </style>

@@ -6,7 +6,6 @@ float64 heater_ki
 
 float64 mass_setpoint
 
-uint16 t_update
 uint16 t_sample
 
 uint16 t_clean_on

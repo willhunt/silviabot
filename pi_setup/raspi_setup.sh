@@ -1,7 +1,5 @@
 #!/bin/sh
 
-sudo -i
-
 # Update
 printf "Updating linux...  "
 apt-get update -y
@@ -20,16 +18,16 @@ chmod +x ~/silvia/update_arduino.sh
 
 # Install ROS
 # Allow restricted, universe, and multiverse repositories
-sudo add-apt-repository universe
-sudo add-apt-repository restricted
-sudo add-apt-repository multiverse
+sudo add-apt-repository universe -y
+sudo add-apt-repository restricted -y
+sudo add-apt-repository multiverse -y
 # Setup sources
 printf "Adding repositories..."
-sudo sh -c 'echo "deb [trusted=yes] http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'
+sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'
 sudo apt-key adv --keyserver 'hkp://keyserver.ubuntu.com:80' --recv-key C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654
 sudo apt update
 printf "Installing ROS..."
-sudo apt install ros-noetic-ros-base python-rosdep gdb -y
+sudo apt install ros-noetic-ros-base python3-rosdep gdb -y
 printf "Setup rosdep..."
 cd ~/ottobot/catkin_ws
 rosdep init
@@ -42,7 +40,7 @@ echo "source ~/ottobot/catkin_ws/devel/setup.bash" >> ~/.bashrc
 
 # Install stuff
 printf "Installing linux packages...  "
-apt install git python3-pip python3-venv libopenjp2-7 libtiff5 apache2 apache2-dev libapache2-mod-wsgi-py3 redis-server i2c-tools sshfs postgresql libpq-dev postgresql-client postgresql-client-common python-dev -y
+sudo apt install git python3-pip python3-venv libopenjp2-7 libtiff5 apache2 apache2-dev libapache2-mod-wsgi-py3 redis-server i2c-tools sshfs postgresql libpq-dev postgresql-client postgresql-client-common python-dev -y
 
 # Static IP - add lines to file
 printf "Setting up static IP...  "
@@ -58,9 +56,9 @@ printf "Setting up static IP...  "
 # sudo touch /etc/cloud/cloud.cfg.d/99-disable-network-config.cfg
 echo "network: {config: disabled}" > /etc/cloud/cloud.cfg.d/99-disable-network-config.cfg
 
-rm /etc/netplan/50-cloud-init.yaml
-touch /etc/netplan/50-cloud-init.yaml
-cat >> /etc/netplan/50-cloud-init.yaml <<EOL
+sudo rm /etc/netplan/50-cloud-init.yaml
+sudo touch /etc/netplan/50-cloud-init.yaml
+sudo cat >> /etc/netplan/50-cloud-init.yaml <<EOL
 network:
   version: 2
   renderer: networkd
@@ -80,7 +78,7 @@ network:
         addresses: [192.168.0.1, 8.8.8.8]
       optional: true
 EOL
-netplan apply
+sudo netplan apply
 
 # Python env
 printf "Setting up Python environment...  "
@@ -93,18 +91,18 @@ pip install -r requirements.txt
 # Apache server
 printf "Setting up Apache server...  "
 cd ~/silvia/pi_setup/
-cp -f 000-default.conf /etc/apache2/sites-available/000-default.conf
+sudo cp -f 000-default.conf /etc/apache2/sites-available/000-default.conf
 # Change permissions
-chmod g+w ~/silvia/silvia
+sudo chmod g+w ~/silvia/silvia
 # Change owner
-chown www-data:www-data ~/silvia/silvia
-chown www-data:www-data ~/.virtualenvs/venv-silvia
+sudo chown www-data:www-data ~/silvia/silvia
+sudo chown www-data:www-data ~/.virtualenvs/venv-silvia
 # Change group
-groupadd server_group
-adduser ubuntu server_group
-adduser www-data server_group
-adduser www-data dialout
-chgrp server_group ~/silvia/silvia/
+sudo groupadd server_group
+sudo adduser ubuntu server_group
+sudo adduser www-data server_group
+sudo adduser www-data dialout
+sudo chgrp server_group ~/silvia/silvia/
 
 # Arduino
 printf "Setting up Arduino CLI...  "

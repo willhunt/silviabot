@@ -3,27 +3,28 @@
     <!-- Machine Image -->
     <div class="machine-container">
       <div v-if="displayOption == 'machine'">
-        <MachineDisplay :machineOn="machineOn" :temperature="temperature" />
+        <MachineDisplay 
+          :machineOn="machineOn"
+          :temperature="response.temperature"
+          :temperature_setpoint="response.temperature_setpoint"
+          :pressure="response.pressure"
+        />
       </div>
       <div v-if="displayOption == 'graph'">
-        <div v-if="sessionData == null" style="display: flex; justify-content: center; align-items: center; min-width: 350px">
+        <div v-if="loggedData.current.length == 0" style="display: flex; justify-content: center; align-items: center; min-width: 350px">
           <!-- <single-response-chart :data="watchedData"></single-response-chart> -->
           <v-btn color="secondary" @click="viewLastSession">Last Session</v-btn>
         </div>
         <div v-else>
-          <single-response-chart :data="sessionData"></single-response-chart>
+          <single-response-chart :data="loggedData"></single-response-chart>
         </div>
       </div>
-      <v-btn v-if="displayOption == 'machine'" id="temp-btn" outlined :color="tempBtnColor" @click="changeDisplay">
-        <div v-if="temperature == null">-</div>
-        <div v-else>{{ temperature | temperatureDisplayFilter }}&#8451;</div>
-      </v-btn>
       <!-- <v-btn v-if="machineOn" id="water-btn" fab small outlined :color="waterLevelColor">
           <v-icon>mdi-water</v-icon>
       </v-btn> -->
       <v-btn v-if="machineBrewing" id="brew-btn" class="" outlined text color="secondary">
         <v-col>
-          <v-row class="pb-1" justify="center">{{ mass | temperatureDisplayFilter }}g</v-row>
+          <v-row class="pb-1" justify="center">{{ response.mass | temperatureDisplayFilter }}g</v-row>
           <v-row class="" justify="center">{{ t_elapsed }}s</v-row>
         </v-col>
       </v-btn>
@@ -49,7 +50,7 @@
         </v-btn>
       </v-col>
       <v-col cols="auto" class="px-1">
-        <v-btn :color="tempBtnColor" @click="changeDisplay" fab small elevation="1" outlined>
+        <v-btn color="secondary" @click="changeDisplay" fab small elevation="1" outlined>
           <div v-if="displayOption == 'machine'">
             <v-icon>mdi-chart-line</v-icon>
           </div>
@@ -68,17 +69,17 @@
     <div v-if="machineOn">
       <v-row align="center">
         <v-progress-linear :value="brewProgress" color="blue-grey" height="25" rounded>
-          <div v-if="mass == null">
+          <div v-if="response.mass == null">
             No scale detected
           </div>
           <div v-else>
-            {{ mass | temperatureDisplayFilter }}g / {{ mass_setpoint }}g
+            {{ response.mass | temperatureDisplayFilter }}g / {{ response.mass_setpoint }}g
           </div>
         </v-progress-linear>
       </v-row>
     </div>
 
-    <div v-if="machineMode != 0">
+    <div v-if="machineMode == 2">
       <v-row align="center">
         <v-col cols="auto" class="px-1" align-self="baseline">
           <v-text-field v-model="dutyOverride" type="number" suffix="%" style="max-width: 70px"></v-text-field>
@@ -104,30 +105,20 @@
           </v-btn>
         </v-col>
         <!-- <v-col cols="auto" class="px-1">
-          <v-btn color="accent lighten-1" @click="toggleAutoTune" disabled>
-            <div v-if="machineMode == 2">
-              Cancel Tuning
-            </div>
-            <div v-else>
-              Auto Tune
-            </div>
-          </v-btn>
+          <v-chip color="info">
+            <v-avatar left color="info darken-1">Kp</v-avatar>{{ heater.kp }}
+          </v-chip>
+        </v-col>
+        <v-col cols="auto" class="px-1">
+          <v-chip color="info">
+            <v-avatar left color="info darken-1">Ki</v-avatar>{{ heater.ki }}
+          </v-chip>
+        </v-col>
+        <v-col cols="auto" class="px-1">
+          <v-chip color="info">
+            <v-avatar left color="info darken-1">Kd</v-avatar>{{ heater.kd }}
+          </v-chip>
         </v-col> -->
-        <v-col cols="auto" class="px-1">
-          <v-chip color="info">
-            <v-avatar left color="info darken-1">Kp</v-avatar>{{ heater_kp }}
-          </v-chip>
-        </v-col>
-        <v-col cols="auto" class="px-1">
-          <v-chip color="info">
-            <v-avatar left color="info darken-1">Ki</v-avatar>{{ heater_ki }}
-          </v-chip>
-        </v-col>
-        <v-col cols="auto" class="px-1">
-          <v-chip color="info">
-            <v-avatar left color="info darken-1">Kd</v-avatar>{{ heater_kd }}
-          </v-chip>
-        </v-col>
       </v-row>
     </div>
 
@@ -139,7 +130,9 @@ import MachineDisplay from '@/components/MachineDisplay.vue'
 import SingleResponseChart from '@/components/SingleResponseChart.vue'
 import apiMixin from '@/mixins/apiMixin'
 import { eventBus } from '@/main'
+import { ros } from '@/ros'
 import axios from 'axios'
+import ROSLIB from 'roslib'
 
 export default {
   name: 'MachineInterface',
@@ -150,20 +143,22 @@ export default {
   },
   data: function () {
     return {
-      temperature: 0,
-      temperature_setpoint: 60,
-      mass: null, // Brewed coffee mass (g)
-      mass_setpoint: 20,
+      response: {
+        temperature: 0,
+        temperature_setpoint: 0,
+        heater_duty: 0,
+        pressure: 0,
+        pressure_setpoint: 0,
+        pump_duty: 0,
+        mass: 0,
+        mass_setpoint: 0,
+        low_water: false
+      },
       dutyOverride: 100,
-      heater_kp: 0,
-      heater_ki: 0,
-      heater_kd: 0,
-      low_water: false,
-      t_update: 10,
       displayOption: 'machine',
-      intervalReference: null, // Varibale to hold setInterval for getting temperature,
-      n_datapoints: 10,
-      sessionData: null,
+      n_datapoints: 500,
+      loggedData: {'current': []},
+      logIntervalReference: null
     }
   },
   props: {
@@ -172,17 +167,11 @@ export default {
     machineMode: Number
   },
   computed: {
-    tempBtnColor: function () {
-      if (Math.abs(this.temperature_setpoint - this.temperature) < 2) {
-        return 'success'
-      }
-      return 'secondary'
-    },
     brewProgress: function () {
-      return 100 * this.mass / this.mass_setpoint
+      return 100 * this.response.mass / this.response.mass_setpoint
     },
     waterLevelColor: function () {
-      return this.low_water ? 'error' : 'success'
+      return this.response.low_water ? 'error' : 'success'
     },
     t_elapsed: function () {
       return 0
@@ -234,66 +223,6 @@ export default {
         eventBus.$emit('changeMode', 3) // Clean
       }
     },
-    updateResponse () {
-      eventBus.$emit('updateStatus')
-      if (this.machineOn) {
-        // Get all responses from current session
-        const getParams = { params: { session: 'active' } }
-
-        axios.get('/api/v1/response/sessions/', getParams)
-          .then(response => {
-            // console.log(response.data)
-            // this.sessionData = response.data
-            if (response.data === '') {
-              // console.log('No response data returned')
-              return false
-            }
-            this.sessionData = Object.assign({}, this.sessionData, response.data)
-            const latestSession = response.data[Object.keys(response.data)[0]]
-            if (latestSession === undefined || latestSession.length === 0) {
-              // console.log('No logged responses yet')
-              return false
-            }
-            const lastResponse = latestSession[latestSession.length - 1]
-            this.temperature = lastResponse.temperature
-            this.mass = lastResponse.mass
-            this.low_water = lastResponse.low_water
-          })
-          .catch(error => console.log(error))
-      } else { // If machine off just get temperature
-        // Get latest response only
-        axios.get('/api/v1/response/latest/')
-          .then(response => {
-            // console.log(response.data)
-            // Check if temperature is old
-            const deltaTime = (new Date() - new Date(response.data.t)) / 1000
-            // console.log(deltaTime)
-            if (deltaTime > 15) {
-              this.temperature = null
-            } else {
-              this.temperature = response.data.temperature
-            }
-            this.mass = response.data.mass
-            this.low_water = response.data.low_water
-          })
-          .catch(error => console.log(error))
-        this.sessionData = null
-      }
-    },
-    updateInterval () {
-      axios.get('/api/v1/settings/1/')
-        .then(response => {
-          this.mass_setpoint = response.data.mass
-          this.temperature_setpoint = response.data.temperature_setpoint
-          this.heater_kp = response.data.heater_kp
-          this.heater_ki = response.data.heater_ki
-          this.heater_kd = response.data.heater_kd
-          this.intervalReference = setInterval(() => {
-            this.updateResponse()
-          }, 1000 * this.t_update)
-        })
-        .catch(error => console.log(error))
-    },
     viewLastSession () {
       axios.get('/api/v1/session/')
         .then(response => {
@@ -301,13 +230,63 @@ export default {
           this.$router.push({ name: 'Session', params: { sessionIds: lastSession.id.toString() } })
         })
         .catch(error => console.log(error))
-    }
+    },
+    logAtInterval () {
+      const dataset = Object.assign({}, this.response)
+      dataset.t = new Date()
+      this.loggedData.current.push(dataset)
+      while (this.loggedData.length > this.n_datapoints) {
+        this.loggedData.pop(0)
+      }
+    },
   },
   created () {
-    // this.updateInterval()
-    // this.updateResponse()
     // Fire event to check on/off status
     eventBus.$emit('updateStatus')
+    // Log data at interval
+    this.logIntervalReference = setInterval(() => { this.logAtInterval() }, 500)
+    // Subscribers
+    var heater_listener = new ROSLIB.Topic({
+      ros : ros,
+      name : '/heater_controller',
+      messageType : 'django_interface/SilviaController'
+    });
+    heater_listener.subscribe((message) => {
+      // console.log('Received message on ' + heater_listener.name + ': T=' + message.input);
+      this.response.temperature = Number(message.input)
+      this.response.temperature_setpoint = Number(message.setpoint)
+      this.response.heater_duty = Number(message.output)
+    });
+    var pump_listener = new ROSLIB.Topic({
+      ros : ros,
+      name : '/pump_controller',
+      messageType : 'django_interface/SilviaController'
+    });
+    pump_listener.subscribe((message) => {
+      // console.log('Received message on ' + pump_listener.name + ': T=' + message.input);
+      this.pressure = Number(message.input)
+      this.pressure_setpoint = Number(message.setpoint)
+      this.pump_duty = Number(message.output)
+    });
+    var scale_listener = new ROSLIB.Topic({
+      ros : ros,
+      name : '/scale',
+      messageType : 'django_interface/SilviaMass'
+    });
+    scale_listener.subscribe((message) => {
+      // console.log('Received message on ' + scale_listener.name + ': T=' + message.input);
+      this.response.mass = Number(message.input)
+      this.response.mass_setpoint = Number(message.setpoint)
+    });
+    var water_listener = new ROSLIB.Topic({
+      ros : ros,
+      name : '/low_water',
+      messageType : 'django_interface/SilviaWater'
+    });
+    water_listener.subscribe((message) => {
+      // console.log('Received message on ' + scale_listener.name + ': T=' + message.input);
+      this.response.low_water = Bool(message.low_water)
+    });
   },
   destroyed () {
     // console.log('Cancel temperature update')
@@ -324,15 +303,6 @@ export default {
 
 .machine-container {
   position: relative;
-}
-
-#temp-btn {
-  position: absolute;
-  top: 29%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  -ms-transform: translate(-50%, -50%);
-  background-color: rgb(236, 236, 236);
 }
 
 #water-btn {
