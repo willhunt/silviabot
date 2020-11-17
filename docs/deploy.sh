@@ -19,6 +19,6 @@ git commit -m 'deploy'
 # SSH
 # git push -f git@github.com:willhunt/silvia.git master:gh-pages
 # HTTP
-git push -f https://github.com/willhunt/silvia.git master:gh-pages
+git push -f https://github.com/willhunt/silviabot.git master:gh-pages
 
 cd -
