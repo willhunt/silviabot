@@ -20,8 +20,8 @@
       </v-row>
 
       <v-card-subtitle>Pressure Control</v-card-subtitle>
-      <v-text-field class="mx-4" label="Profile Time" type="number" v-model="profile_csv.profile_pressure_setpoints" suffix="s"></v-text-field>
-      <v-text-field class="mx-4" label="Profile Pressure" type="number" v-model="pprofile_csv.profile_time_setpoints" suffix="bar"></v-text-field>
+      <v-text-field class="mx-4" label="Profile Time"  v-model="profile_csv.profile_time_setpoints" suffix="s"></v-text-field>
+      <v-text-field class="mx-4" label="Profile Pressure" v-model="profile_csv.profile_pressure_setpoints" suffix="bar"></v-text-field>
       <v-row class="mx-1">
         <v-col>
           <v-text-field class="" label="P Gain" type="number" v-model="settings.pump_kp"></v-text-field>
@@ -108,7 +108,9 @@ export default {
       // Make sure all inputs are numbers
       const settings = {}
       Object.keys(this.settings).forEach((key, index) => {
-        if (key == profile_pressure_setpoints || key == profile_time_setpoints) {
+        if (key === "profile_pressure_setpoints") {
+          settings[key] = this.profile_csv[key].split(',').map(function(x) { return x * 100000})
+        } else if (key === "profile_time_setpoints") {
           settings[key] = this.profile_csv[key].split(',')
         } else {
           settings[key] = this.settings[key]
@@ -130,8 +132,10 @@ export default {
         console.log(response.data)
         this.settingsServer = Object.assign({}, response.data)
         this.settings = Object.assign({}, response.data)
-        this.profile_time_csv = response.data.profile_time_setpoints.join(',')
-        this.profile_pressure_csv = response.data.profile_pressure_setpoints.join(',')
+        this.profile_csv.profile_time_setpoints = response.data.profile_time_setpoints.join(',')
+        this.profile_csv.profile_pressure_setpoints = response.data.profile_pressure_setpoints
+          .map(function(x) { return x / 100000})
+          .join(',')
         this.saveUpToDate = true
       })
       .catch(error => console.log(error))

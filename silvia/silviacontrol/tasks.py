@@ -17,9 +17,10 @@ status_publisher = roslibpy.Topic(client, '/status_change', 'django_interface/Si
 status_service = roslibpy.Service(client, '/status_request', '/status')
 status_request = roslibpy.ServiceRequest()
 # Override
-heater_duty_publisher = roslibpy.Topic(client, '/heater_duty_request', 'django_interface/SilviaHeaterDuty', latch=False)
+heater_duty_publisher = roslibpy.Topic(client, '/heater_duty', 'std_msgs/Float64', latch=False)
+pump_duty_publisher = roslibpy.Topic(client, '/pump_duty', 'std_msgs/Float64', latch=False)
 # Settings
-settings_publisher = roslibpy.Topic(client, '/settings', 'django_interface/SilviaStatus', latch=False)
+settings_publisher = roslibpy.Topic(client, '/settings', 'django_interface/SilviaSettings', latch=False)
 
 @shared_task(queue='comms')
 def async_scale_update(brew, mass_setpoint):
@@ -45,19 +46,24 @@ def async_scale_update(brew, mass_setpoint):
                 debug_log("No connection to scale")
 
 @shared_task(queue='comms')
-def async_ros_set_status(mode=-1, brew=None):
+def async_ros_set_status(mode=-1, brew=False):
     """
     Send status update via ROS through celery
+
+    Can't get roslibpy to work using async tasks/
     """
-    local_client = roslibpy.Ros(host='localhost', port=9090)
-    local_client.run()
-    local_status_publisher = roslibpy.Topic(local_client, '/status_change', 'django_interface/SilviaStatus', latch=True)
-    msg_content = {"mode": mode}
-    if brew is not None:
-        msg_content["brew"] = brew
-    local_status_publisher.publish(roslibpy.Message(msg_content))
-    local_status_publisher.unadvertise()
-    local_client.terminate()
+    # local_client = roslibpy.Ros(host='localhost', port=9090)
+    # local_client.run()
+    # local_status_publisher = roslibpy.Topic(client, '/status_change', 'django_interface/SilviaStatus', latch=True)
+    # msg_content = {"mode": int(mode)}
+    # if brew is not None:
+    #     msg_content["brew"] = brew in ["True", "true", True]
+    # status_publisher.publish(roslibpy.Message(msg_content))
+    # local_status_publisher.publish(roslibpy.Message(msg_content))
+    # local_status_publisher.unadvertise()
+    # local_client.terminate()
+    # debug_log(client.get_topics())
+    status_request = requests.put("http://localhost:8080/api/v1/status/1/", data={"mode": mode, "brew": brew})
     debug_log("Status change requested via async call: Mode={}, Brew={}".format(mode, brew))
  
 @shared_task(queue='celery')
@@ -75,28 +81,37 @@ def ros_set_status(mode=-1, brew=None):
     """
     Send status update via ROS
     """
-    msg_content = {"mode": mode}
-    if brew is not None:
-        msg_content["brew"] = brew
+    msg_content = {"mode": int(mode)}
+    msg_content["brew"] = brew in ["True", "true", True]  # Account for string or bool
     debug_log("Advertised? {}".format(status_publisher.is_advertised))
     status_publisher.publish(roslibpy.Message(msg_content))
     debug_log("Status change requested via sync call: Mode={}, Brew={}".format(mode, brew))
 
 def ros_set_heater(duty=0):
     """
-    Control override/manual mode of arduino
+    Control heater manually
     """
     msg = roslibpy.Message({
-        "duty": duty
+        "data": duty
     })
     heater_duty_publisher.publish(msg)
-    debug_log("Heater duty request via async call: Duty={}".format(duty))
+    debug_log("Heater duty request via sync call: Duty={}".format(duty))
 
-def ros_set_settings(settings=None):
+def ros_set_pump(duty=0):
+    """
+    Control pump manually
+    """
+    msg = roslibpy.Message({
+        "data": duty
+    })
+    pump_duty_publisher.publish(msg)
+    debug_log("Pump duty request via sync call: Duty={}".format(duty))
+
+def ros_set_settings(settings_dict=None):
     """
     Send settings update via ROS
     """
-    if settings is None:
-        settings = SettingsModel.objects.get(pk=1)
-    msg = roslibpy.Message(settings.__dict__)
-    status_publisher.publish(msg)
+    if settings_dict is None:
+        settings_dict = SettingsModel.objects.get(pk=1).__dict__
+    msg = roslibpy.Message(settings_dict)
+    settings_publisher.publish(msg)

@@ -22,10 +22,10 @@ class SilviaStatus : public SilviaPublisher {
         void populateMessage();
         django_interface::SilviaStatus status_report_msg_;
         ros::Subscriber<django_interface::SilviaStatus, SilviaStatus> status_subscriber_;
-        ros::ServiceServer<StatusChangeRequest, StatusChangeResponse, SilviaStatus> status_change_server_;
+        // ros::ServiceServer<StatusChangeRequest, StatusChangeResponse, SilviaStatus> status_change_server_;
         ros::Subscriber<django_interface::SilviaSettings, SilviaStatus> settings_subscriber_;
         void statusChangeCallback(const django_interface::SilviaStatus& msg);
-        void statusChangeSrvCallback(const StatusChangeRequest& request, StatusChangeResponse& response);
+        // void statusChangeSrvCallback(const StatusChangeRequest& request, StatusChangeResponse& response);
         void setSettingsCallback(const django_interface::SilviaSettings& msg);
         int mode_;
 

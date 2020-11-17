@@ -13,7 +13,8 @@ router.register(r'schedule', views.ScheduleViewSet)
 urlpatterns = [
     # Rest API routing
     url(r'^api/v1/', include(router.urls)),
-    url(r'^api/v1/override', views.ManualControlView.as_view()),
+    url(r'^api/v1/heaterduty', views.HeaterDutyView.as_view()),
+    url(r'^api/v1/pumpduty', views.PumpDutyView.as_view()),
     url(r'^api/v1/status', views.StatusView.as_view()),
     url(r'^api-auth/', include('rest_framework.urls')),
     # Django routing

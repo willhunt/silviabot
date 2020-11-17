@@ -4,6 +4,7 @@
       <response-chart class="px-6 pt-6 pb-1" :chartData="graphData" :chartOptions="graphOptions"></response-chart>
       <v-card-actions>
         <v-spacer></v-spacer>
+        <v-btn color="secondary" @click="graphBrewOnly = !graphBrewOnly">isolate brew</v-btn>
         <v-btn color="info" @click="dataHidden=!dataHidden">data</v-btn>
       </v-card-actions>
     </v-card>
@@ -32,6 +33,7 @@ export default {
   },
   data: function () {
     return {
+      graphBrewOnly: false,
       chartWidth: 0.8 * window.innerWidth,
       graphOptions: {
         scales: {
@@ -192,36 +194,45 @@ export default {
 
         // Loop through responses and add data
         const xPoint0 = new Date(this.data[session][0].t)
-        this.data[session].forEach((responseItem, responseIndex) => {
-          const xPoint = (new Date(responseItem.t) - xPoint0) / 1000
-          datasetT.data.push({
-            x: xPoint,
-            y: responseItem.temperature
-          })
-          datasetTS.data.push({
-            x: xPoint,
-            y: responseItem.temperature_setpoint
-          })
-          datasetTD.data.push({
-            x: xPoint,
-            y: responseItem.heater_duty
-          })
-          datasetP.data.push({
-            x: xPoint,
-            y: responseItem.pressure
-          })
-          datasetPS.data.push({
-            x: xPoint,
-            y: responseItem.pressure_setpoint
-          })
-          datasetPD.data.push({
-            x: xPoint,
-            y: responseItem.pressure_duty
-          })
-          datasetM.data.push({
-            x: xPoint,
-            y: responseItem.m
-          })
+        let lastPointWasBrewing = false  // Use to determine when brewing ends to break loop
+
+        this.data[session].every((responseItem, responseIndex) => {
+          if ((responseItem.brew && this.graphBrewOnly) || !this.graphBrewOnly) {
+            const xPoint = (new Date(responseItem.t) - xPoint0) / 1000
+            datasetT.data.push({
+              x: xPoint,
+              y: responseItem.temperature
+            })
+            datasetTS.data.push({
+              x: xPoint,
+              y: responseItem.temperature_setpoint
+            })
+            datasetTD.data.push({
+              x: xPoint,
+              y: responseItem.heater_duty
+            })
+            datasetP.data.push({
+              x: xPoint,
+              y: responseItem.pressure / 100000  // Convert to bar
+            })
+            datasetPS.data.push({
+              x: xPoint,
+              y: responseItem.pressure_setpoint / 100000  // Convert to bar
+            })
+            datasetPD.data.push({
+              x: xPoint,
+              y: responseItem.pressure_duty
+            })
+            datasetM.data.push({
+              x: xPoint,
+              y: responseItem.m
+            })
+          }  // endif
+          if (this.graphBrewOnly && (!responseItem.brew && lastPointWasBrewing)) { return false }  // break if brewing is stopped
+          else {
+            lastPointWasBrewing = responseItem.brew
+            return true
+          }
         })
         graphData.datasets.push(datasetT)
         graphData.datasets.push(datasetTS)

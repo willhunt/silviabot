@@ -22,10 +22,10 @@
       <!-- <v-btn v-if="machineOn" id="water-btn" fab small outlined :color="waterLevelColor">
           <v-icon>mdi-water</v-icon>
       </v-btn> -->
-      <v-btn v-if="machineBrewing" id="brew-btn" class="" outlined text color="secondary">
+      <v-btn v-if="machineOn" id="brew-btn" class="" outlined text color="secondary">
         <v-col>
           <v-row class="pb-1" justify="center">{{ response.mass | temperatureDisplayFilter }}g</v-row>
-          <v-row class="" justify="center">{{ t_elapsed }}s</v-row>
+          <v-row class="" justify="center">{{ t_brew }}s</v-row>
         </v-col>
       </v-btn>
     </div>
@@ -38,10 +38,18 @@
       <v-spacer></v-spacer>
       <v-col cols="auto" class="px-1" v-if="machineOn">
         <div v-if="machineBrewing">
-          <v-btn color="error" @click="toggleBrew">Cancel</v-btn>
+          <v-btn color="error" fab small elevation="1" @click="toggleBrew"><v-icon>mdi-coffee</v-icon></v-btn>
         </div>
         <div v-else>
-          <v-btn color="accent lighten-1" @click="toggleBrew">Brew</v-btn>
+          <v-btn color="info" fab small elevation="1" @click="toggleBrew"><v-icon>mdi-coffee</v-icon></v-btn>
+        </div>
+      </v-col>
+      <v-col cols="auto" class="px-1" v-if="machineOn">
+        <div v-if="machineMode==3">
+          <v-btn color="error" fab small elevation="1" @click="toggleClean"><v-icon>mdi-dishwasher-off</v-icon></v-btn>
+        </div>
+        <div v-else>
+          <v-btn color="secondary" fab small elevation="1" @click="toggleClean"><v-icon>mdi-dishwasher</v-icon></v-btn>
         </div>
       </v-col>
       <v-col cols="auto" class="px-1">
@@ -66,7 +74,7 @@
       </v-col>
     </v-row>
 
-    <div v-if="machineOn">
+    <div v-if="machineBrewing">
       <v-row align="center">
         <v-progress-linear :value="brewProgress" color="blue-grey" height="25" rounded>
           <div v-if="response.mass == null">
@@ -79,29 +87,23 @@
       </v-row>
     </div>
 
-    <div v-if="machineMode == 2">
+    <div v-if="machineMode == 2  && !machineBrewing">
       <v-row align="center">
         <v-col cols="auto" class="px-1" align-self="baseline">
-          <v-text-field v-model="dutyOverride" type="number" suffix="%" style="max-width: 70px"></v-text-field>
+          <v-text-field v-model="heaterDuty" type="number" suffix="%" style="max-width: 70px" label="Heater duty"></v-text-field>
         </v-col>
         <v-col cols="auto" class="px-1">
-          <v-btn color="secondary" @click="toggleHeaterOn">
-            Heat On
+          <v-btn color="secondary" @click="sendHeaterDuty">
+            Heater
           </v-btn>
         </v-col>
-        <v-col cols="auto" class="px-1">
-          <v-btn color="secondary" @click="toggleHeaterOff">
-            Off
-          </v-btn>
+        <v-spacer />
+        <v-col cols="auto" class="px-1" align-self="baseline">
+          <v-text-field v-model="pumpDuty" type="number" suffix="%" style="max-width: 70px" label="Pump duty"></v-text-field>
         </v-col>
         <v-col cols="auto" class="px-1">
-          <v-btn color="accent lighten-1" @click="toggleClean">
-            <div v-if="machineMode == 3">
-              Cancel Clean
-            </div>
-            <div v-else>
-              Run Clean
-            </div>
+          <v-btn color="secondary" @click="sendPumpDuty">
+            Pump
           </v-btn>
         </v-col>
         <!-- <v-col cols="auto" class="px-1">
@@ -154,11 +156,13 @@ export default {
         mass_setpoint: 0,
         low_water: false
       },
-      dutyOverride: 100,
+      heaterDuty: 100,
+      pumpDuty: 100,
       displayOption: 'machine',
       n_datapoints: 500,
       loggedData: {'current': []},
-      logIntervalReference: null
+      logIntervalReference: null,
+      t_brew: 0
     }
   },
   props: {
@@ -172,9 +176,6 @@ export default {
     },
     waterLevelColor: function () {
       return this.response.low_water ? 'error' : 'success'
-    },
-    t_elapsed: function () {
-      return 0
     }
   },
   methods: {
@@ -193,35 +194,32 @@ export default {
       eventBus.$emit('toggleBrew')
     },
     toggleOverride () {
-      const mode = (this.machineMode === 0) ? 2 : 0
+      const mode = (this.machineMode != 2) ? 2 : 1
       eventBus.$emit('changeMode', mode)
     },
-    toggleHeaterOn () {
-      const getParams = {
-        params: {
-          duty: this.dutyOverride
-        }
-      }
-      axios.get('/api/v1/override/', getParams)
-        .then(response => {})
-        .catch(error => console.log(error))
-    },
-    toggleHeaterOff () {
-      const getParams = {
-        params: {
-          duty: 0
-        }
-      }
-      axios.get('/api/v1/override/', getParams)
-        .then(response => {})
-        .catch(error => console.log(error))
-    },
     toggleClean () {
-      if (this.machineMode === 3) {
-        eventBus.$emit('changeMode', 2) // Manual
-      } else {
-        eventBus.$emit('changeMode', 3) // Clean
+      const mode = (this.machineMode != 3) ? 3 : 1
+      eventBus.$emit('changeMode', mode)
+    },
+    sendHeaterDuty () {
+      const getParams = {
+        params: {
+          duty: this.heaterDuty
+        }
       }
+      axios.get('/api/v1/heaterduty/', getParams)
+        .then(response => {})
+        .catch(error => console.log(error))
+    },
+    sendPumpDuty () {
+      const getParams = {
+        params: {
+          duty: this.pumpDuty
+        }
+      }
+      axios.get('/api/v1/pumpduty/', getParams)
+        .then(response => {})
+        .catch(error => console.log(error))
     },
     viewLastSession () {
       axios.get('/api/v1/session/')
@@ -263,7 +261,7 @@ export default {
       messageType : 'django_interface/SilviaController'
     });
     pump_listener.subscribe((message) => {
-      // console.log('Received message on ' + pump_listener.name + ': T=' + message.input);
+      // console.log('Received message on ' + pump_listener.name + ': P=' + message.input);
       this.pressure = Number(message.input)
       this.pressure_setpoint = Number(message.setpoint)
       this.pump_duty = Number(message.output)
@@ -286,6 +284,14 @@ export default {
     water_listener.subscribe((message) => {
       // console.log('Received message on ' + scale_listener.name + ': T=' + message.input);
       this.response.low_water = Bool(message.low_water)
+    });
+    var timer_listener = new ROSLIB.Topic({
+      ros : ros,
+      name : '/brew_duration',
+      messageType : 'django_interface/SilviaBrewTimer'
+    });
+    timer_listener.subscribe((message) => {
+      this.t_brew = Bool(message.duration.secs)
     });
   },
   destroyed () {

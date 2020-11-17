@@ -6,7 +6,7 @@
 SilviaStatus::SilviaStatus() 
     : SilviaPublisher("status", &status_report_msg_, PUB_STATUS_INTERVAL)
     , status_subscriber_("status_change", &SilviaStatus::statusChangeCallback, this)
-    , status_change_server_("status_change_srv", &SilviaStatus::statusChangeSrvCallback, this)
+    // , status_change_server_("status_change_srv", &SilviaStatus::statusChangeSrvCallback, this)
     , settings_subscriber_("settings", &SilviaStatus::setSettingsCallback, this)
     , mode_(MODE_OFF)
 {
@@ -16,6 +16,7 @@ SilviaStatus::SilviaStatus()
 void SilviaStatus::setup(NodeHandle* nh) {
     nh->subscribe(status_subscriber_);
     nh->subscribe(settings_subscriber_);
+    // nh->advertiseService(status_change_server_);
     SilviaPublisher::setup(nh);
 }
 
@@ -32,11 +33,11 @@ void SilviaStatus::statusChangeCallback(const django_interface::SilviaStatus& ms
     publish(true);  // Force publish
 }
 
-void SilviaStatus::statusChangeSrvCallback(const StatusChangeRequest& request, StatusChangeResponse& response) {
-    statusChangeCallback(request.status);
-    response.status.mode = mode_;
-    response.status.brew = getBrew();
-}
+// void SilviaStatus::statusChangeSrvCallback(const StatusChangeRequest& request, StatusChangeResponse& response) {
+//     statusChangeCallback(request.status);
+//     response.status.mode = mode_;
+//     response.status.brew = getBrew();
+// }
 
 void SilviaStatus::setSettingsCallback(const django_interface::SilviaSettings& msg) {
     cleaner.setSettingsCallback(msg);

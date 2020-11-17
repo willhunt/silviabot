@@ -7,14 +7,5 @@ sqlalchemy
 random-word
 django-cors-headers
 whitenoise
-smbus2
-gpiozero
-pigpio
-RPi.GPIO
 redis
-Pillow
-adafruit-blinka
-adafruit-circuitpython-ssd1306
 requests
-pyserial
-psycopg2

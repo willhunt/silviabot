@@ -165,8 +165,8 @@ CELERY_ACCEPT_CONTENT = ['json']
 CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'  # Redis
 CELERY_TASK_SERIALIZER = 'json'
 # Just use this (True) for debuging
-CELERY_ALWAYS_EAGER = True
-CELERY_EAGER_PROPAGATES_EXCEPTIONS = True
+CELERY_ALWAYS_EAGER = False
+# CELERY_EAGER_PROPAGATES_EXCEPTIONS = True
 CELERY_ONCE = {
   'backend': 'celery_once.backends.Redis',
   'settings': {

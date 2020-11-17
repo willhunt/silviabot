@@ -74,7 +74,7 @@ void TemperatureController::populateMessage() {
     msg_.header.stamp = nh_->now();
     msg_.input = *input_;
     msg_.setpoint = setpoint_;
-    msg_.output = output_;
+    msg_.output = getDuty();
     msg_.output_p = output_p_;
     msg_.output_i = output_i_;
     msg_.output_d = output_d_;

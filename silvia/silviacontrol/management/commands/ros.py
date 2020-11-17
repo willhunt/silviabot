@@ -14,7 +14,7 @@ class RosResponseManager:
     def __init__(self):
         self.update_interval = UPDATE_INTERVAL_WARM
         self.last_update = datetime.now()
-        self.status_msg = roslibpy.Message()
+        self.status_msg = roslibpy.Message({"mode": django_settings.MODE_OFF, "brew": False})
         self.heater_msg = roslibpy.Message()
         self.pump_msg = roslibpy.Message()
         self.water_msg = roslibpy.Message()
@@ -81,8 +81,8 @@ class RosResponseManager:
         try:
             t_pump = datetime.utcfromtimestamp(int(self.pump_msg["header"]["stamp"]["secs"]))
             if (datetime.utcnow() - t_pump).total_seconds() < 5:
-                response_dict["temperature"] = self.pump_msg["input"]
-                response_dict["temperature_setpoint"] = self.pump_msg["setpoint"]
+                response_dict["pressure"] = self.pump_msg["input"]
+                response_dict["pressure_setpoint"] = self.pump_msg["setpoint"]
                 response_dict["pump_duty"] = self.pump_msg["output"]
                 response_dict["pump_kp"] = self.pump_msg["kp"]
                 response_dict["pump_ki"] = self.pump_msg["ki"]
@@ -108,9 +108,11 @@ class RosResponseManager:
         async_save_response.delay(response_dict)
 
     def update(self):
-        if (datetime.now() - self.last_update).total_seconds() >= self.update_interval:
-            # Save to database via celery to avoid slowing down loggong rate (will join queue)
-            self.initiate_response_log()
+        if self.status_msg["mode"] != django_settings.MODE_OFF:
+            if (datetime.now() - self.last_update).total_seconds() >= self.update_interval:
+                # Save to database via celery to avoid slowing down loggong rate (will join queue)
+                self.initiate_response_log()
+                self.last_update = datetime.now()
 
 
 class Command(BaseCommand):

@@ -83,7 +83,7 @@ export default {
     eventBus.$on('toggleBrew', () => {
       const axiosData = {
         id: 1,
-        mode: this.MODE_IGNORE,
+        mode: this.machineMode,
         brew: !this.machineBrewing
       }
 

@@ -11,7 +11,7 @@ from .serializers import (SettingsSerializer, SessionSerializer,
                             ResponseSerializer, ScheduleSerializer)
 from .utils import debug_log
 import json
-from .tasks import ros_set_heater, ros_get_status, ros_set_status
+from .tasks import ros_set_heater, ros_get_status, ros_set_status, ros_set_pump
 
 # Html Views -----------
 def index(request):
@@ -112,7 +112,7 @@ class ScheduleViewSet(viewsets.ModelViewSet):
     queryset = ScheduleModel.objects.all()
     serializer_class = ScheduleSerializer
 
-class ManualControlView(views.APIView):
+class HeaterDutyView(views.APIView):
     """
     Non-model based view for turning the heater on and off manually
     """
@@ -120,9 +120,22 @@ class ManualControlView(views.APIView):
         """
         Turn heater on/off
         """
-        debug_log("Manual control GET request")
+        debug_log("Manual heater control GET request")
         duty = float(self.request.query_params.get('duty', 0))
         ros_set_heater(duty=duty)
+        return Response({"duty": duty})
+
+class PumpDutyView(views.APIView):
+    """
+    Non-model based view for turning the pump on and off manually
+    """
+    def get(self, request, format=None):
+        """
+        Turn heater on/off
+        """
+        debug_log("Manual pump control GET request")
+        duty = float(self.request.query_params.get('duty', 0))
+        ros_set_pump(duty=duty)
         return Response({"duty": duty})
 
 def string2bool(input_string):

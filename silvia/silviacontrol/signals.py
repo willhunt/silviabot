@@ -25,7 +25,7 @@ def save_schedule(sender, instance, raw, using, update_fields, **kwargs):
             crontab=crontab_on,
             name="on:{0} {1}".format(instance.id, instance.name),
             # task='silviacontrol.tasks.async_machine_on',
-            task='silviacontrol.tasks.async_ros_update',
+            task='silviacontrol.tasks.async_ros_set_status',
             args="[{}, false]".format(django_settings.MODE_PID),  # json format required
             enabled=instance.active
         )
@@ -52,8 +52,8 @@ def save_schedule(sender, instance, raw, using, update_fields, **kwargs):
             crontab=crontab_off,
             name="off:{0} {1}".format(instance.id, instance.name),
             # task='silviacontrol.tasks.async_machine_off',
-            task='silviacontrol.tasks.async_ros_status',
-            args="[{}, false]".format(django_settings.MODE_PID),  # json format required
+            task='silviacontrol.tasks.async_ros_set_status',
+            args="[{}, false]".format(django_settings.MODE_OFF),  # json format required
             enabled=instance.active
         )
         instance.schedule_off = schedule_off
@@ -93,9 +93,9 @@ def save_settings(sender, instance, raw, using, update_fields, **kwargs):
     """
     When updating settings publish
     """
-    ros_set_settings(instance)
+    ros_set_settings(instance.__dict__)
 
-@receiver(post_save, sender=ResponseModel)
+@receiver(pre_save, sender=ResponseModel)
 def save_response(sender, instance, raw, using, update_fields, **kwargs):
     """
     When saving response model check if sessions needs updating
