@@ -11,17 +11,18 @@
 #include "silvia_output.h"
 #include "silvia_sensors.h"
 #include "silvia_ros.h"
+#include "silvia_controllers.h"
 
 class CleaningProcess : public SilviaPublisher {
     private:
         bool active_;  // Cleaner active?
         int n_cycles_;  // Number of pump on/off cycles
-        int t_on_;  // Time pump is on for each cycle
-        int t_off_;  // Time pump is off for each cycle
+        unsigned long t_on_;  // Time pump is on for each cycle
+        unsigned long t_off_;  // Time pump is off for each cycle
         int t_total_;  // Total cleaning time
         unsigned char previous_mode_;
         unsigned long duration_;  // Duration of cleaning so far
-        unsigned long last_update_;
+        unsigned long t_start_;
         django_interface::SilviaCleaner msg_;
         void pumpOn();
         void pumpOff();
@@ -41,6 +42,7 @@ class CleaningProcess : public SilviaPublisher {
 };
 
 extern RelayOutput brew_output;
+extern PressureController pump;
 extern WaterLevelSensor water_sensor;
 
 #endif // SILVIA_CLEAN_H

@@ -39,7 +39,7 @@ echo "source ~/silviabot/catkin_ws/devel/setup.bash" >> ~/.bashrc
 
 # Install stuff
 printf "Installing linux packages...  "
-sudo apt install git python3-pip python3-venv libopenjp2-7 libtiff5 apache2 apache2-dev libapache2-mod-wsgi-py3 redis-server sshfs postgresql libpq-dev postgresql-client postgresql-client-common python-dev -y
+sudo apt install git python3-pip python3-venv libopenjp2-7 libtiff5 apache2 apache2-dev libapache2-mod-wsgi-py3 redis-server sshfs postgresql libpq-dev postgresql-client postgresql-client-common python-dev supervisor -y
 
 # Static IP - add lines to file
 # printf "Setting up static IP...  "
@@ -137,9 +137,8 @@ sudo chgrp -R server_group /var/run/celery
 sudo chgrp -R server_group /var/log/celery
 sudo chgrp -R server_group /var/log/ros
 # Config
-sudo cp -f supervisor/silvia_celery.conf /etc/supervisor/conf.d/silvia_celery.conf
-sudo cp -f supervisor/silvia_celerybeat.conf /etc/supervisor/conf.d/silvia_celerybeat.conf
-sudo cp -f supervisor/ros.conf /etc/supervisor/conf.d/ros.conf
+sudo cp -f ~/silviabot/pi_setup/supervisor/silvia_celery.conf /etc/supervisor/conf.d/silvia_celery.conf
+sudo cp -f ~/silviabot/pi_setup/supervisor/ros.conf /etc/supervisor/conf.d/ros.conf
 sudo chgrp -R server_group /var/log/supervisor
 sudo chmod g+wr /var/log/supervisor/supervisord.log
 
