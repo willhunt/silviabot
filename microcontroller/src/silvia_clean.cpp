@@ -6,8 +6,8 @@ CleaningProcess::CleaningProcess()
     : SilviaPublisher("cleaner", &msg_, PUB_CLEANER_INTERVAL)
     , active_(false)
     , n_cycles_(5)
-    , t_on_(10000)
-    , t_off_(50000)
+    , t_on_(5000)
+    , t_off_(5000)
 {}
 
 void CleaningProcess::setup(NodeHandle* nh) {
@@ -66,7 +66,7 @@ int CleaningProcess::getTimeRemainingMins() {
     return getTimeRemaining() / 60000;
 }
 int CleaningProcess::getTimeRemainingSecs() {
-    return getTimeRemaining() % 60000;
+    return int(getTimeRemaining() / 1000) % 60;
 }
 
 void CleaningProcess::setTimings(int n_cycles, int t_on, int t_off) {
