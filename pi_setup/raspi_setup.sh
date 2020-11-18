@@ -37,6 +37,9 @@ rosdep install --from-paths src --ignore-src -r -y
 echo "source /opt/ros/melodic/setup.bash" >> ~/.bashrc
 echo "source ~/silviabot/catkin_ws/devel/setup.bash" >> ~/.bashrc
 
+cd ~/silviabot/catkin_ws
+catkin_make
+
 # Install stuff
 printf "Installing linux packages...  "
 sudo apt install git python3-pip python3-venv libopenjp2-7 libtiff5 apache2 apache2-dev libapache2-mod-wsgi-py3 redis-server sshfs postgresql libpq-dev postgresql-client postgresql-client-common python-dev supervisor -y
@@ -138,9 +141,11 @@ sudo chgrp -R server_group /var/log/celery
 sudo chgrp -R server_group /var/log/ros
 # Config
 sudo cp -f ~/silviabot/pi_setup/supervisor/silvia_celery.conf /etc/supervisor/conf.d/silvia_celery.conf
-sudo cp -f ~/silviabot/pi_setup/supervisor/ros.conf /etc/supervisor/conf.d/ros.conf
+sudo cp -f ~/silviabot/pi_setup/supervisor/silvia_ros.conf /etc/supervisor/conf.d/silvia_ros.conf
 sudo chgrp -R server_group /var/log/supervisor
 sudo chmod g+wr /var/log/supervisor/supervisord.log
+sudo supervisord -c /etc/supervisor/supervisord.conf
+
 
 # Reboot
 printf "Finished, now reboot."

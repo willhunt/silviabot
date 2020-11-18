@@ -65,7 +65,7 @@ $ sudo supervisorctl update
 ```
 
 Inspect logs:
-```bash
+```bash 
 $ tail /var/log/celery/silvia_worker.log
 $ tail /var/log/celery/silvia_beat.log
 ```
