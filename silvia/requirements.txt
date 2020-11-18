@@ -9,3 +9,5 @@ django-cors-headers
 whitenoise
 redis
 requests
+django-cors-headers
+psycopg2

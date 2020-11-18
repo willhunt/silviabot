@@ -3,7 +3,6 @@ from django.contrib.postgres.fields import ArrayField
 from django.utils import timezone
 from datetime import datetime, time
 from django_celery_beat.models import CrontabSchedule, PeriodicTask
-from random_word import RandomWords
 
 def get_default_pressure_profile():
     return [9, 9]
@@ -117,7 +116,7 @@ class ScheduleModel(models.Model):
     """
     Machine on/off schedule model
     """
-    name = models.CharField(max_length=20, default="New Schedule") #('Schedule %s' % RandomWords().get_random_word()))  # Name of schedule (e.g. "Morning")
+    name = models.CharField(max_length=20, default="New Schedule")
     days = models.CharField(max_length=7, default='0000000')  # Day schedule - string of 0 or 1's to indicate if active on weekday starting with Sun=0
     t_on = models.TimeField(default=time(hour=0, minute=0))
     t_off = models.TimeField(default=time(hour=0, minute=0))
