@@ -2,7 +2,7 @@ import roslibpy
 from django.core.management.base import BaseCommand, CommandError
 from silviacontrol.models import ResponseModel
 from silviacontrol.utils import debug_log
-from silviacontrol.tasks import async_save_response
+from silviacontrol.tasks import async_save_response, ros_set_settings
 from django.conf import settings as django_settings
 from datetime import datetime
 from django.utils.timezone import make_aware, now
@@ -19,6 +19,7 @@ class RosResponseManager:
         self.pump_msg = roslibpy.Message()
         self.water_msg = roslibpy.Message()
         self.scale_msg = roslibpy.Message()
+        self.settings_msg = roslibpy.Message()
 
         self.client = roslibpy.Ros(host='localhost', port=9090)
         self.client.run()
@@ -35,6 +36,10 @@ class RosResponseManager:
         self.water_listener.subscribe(self.water_callback)
         self.scale_listener = roslibpy.Topic(self.client, '/scale', 'django_interface/SilviaMass')
         self.scale_listener.subscribe(self.scale_callback)
+        self.settings_request_listener = roslibpy.Topic(self.client, '/settings_request', 'std_msgs/Empty')
+        self.settings_request_listener.subscribe(self.settings_request_callback)
+
+        # self.settings_publisher = roslibpy.Topic(self.client, '/settings', 'django_interface/SilviaSettings')
 
 
     def status_callback(self, msg):
@@ -55,6 +60,9 @@ class RosResponseManager:
 
     def scale_callback(self, msg):
         self.scale_msg = msg
+
+    def settings_request_callback(self):
+        ros_set_settings()
 
     def initiate_response_log(self):
         response_dict = {

@@ -8,7 +8,7 @@
 Node handle
 */
 // MAX_SUBSCRIBERS, MAX_PUBLISHERS, INPUT_SIZE, OUTPUT_SIZE
-typedef ros::NodeHandle_<ArduinoHardware, 5, 8, 256, 256> NodeHandle;
+typedef ros::NodeHandle_<ArduinoHardware, 5, 10, 256, 256> NodeHandle;
 
 /* 
 Rosserial publisher class

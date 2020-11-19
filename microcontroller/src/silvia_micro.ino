@@ -91,6 +91,8 @@ void setup(void) {
 }
 
 void loop(void)  {
+    silvia_status.update();
+
     power_switch.update();
     brew_switch.update();
 

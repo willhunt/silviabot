@@ -8,6 +8,8 @@
           :temperature="response.temperature"
           :temperature_setpoint="response.temperature_setpoint"
           :pressure="response.pressure"
+          :mass="response.mass"
+          :brew_time="t_brew"
         />
       </div>
       <div v-if="displayOption == 'graph'">
@@ -19,15 +21,6 @@
           <single-response-chart :data="loggedData"></single-response-chart>
         </div>
       </div>
-      <!-- <v-btn v-if="machineOn" id="water-btn" fab small outlined :color="waterLevelColor">
-          <v-icon>mdi-water</v-icon>
-      </v-btn> -->
-      <v-btn v-if="machineOn" id="brew-btn" class="" outlined text color="secondary">
-        <v-col>
-          <v-row class="pb-1" justify="center">{{ response.mass | temperatureDisplayFilter }}g</v-row>
-          <v-row class="" justify="center">{{ t_brew }}s</v-row>
-        </v-col>
-      </v-btn>
     </div>
     <br>
     <!-- Controls -->
@@ -291,7 +284,7 @@ export default {
       messageType : 'django_interface/SilviaBrewTimer'
     });
     timer_listener.subscribe((message) => {
-      this.t_brew = Boolean(message.duration.secs)
+      this.t_brew = Number(message.duration.secs)
     });
   },
   destroyed () {
@@ -309,30 +302,5 @@ export default {
 
 .machine-container {
   position: relative;
-}
-
-#water-btn {
-  position: absolute;
-  /* top: 10%;
-  left: 83%; */
-  /* top: 92.1%; */
-  top: 20%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  -ms-transform: translate(-50%, -50%);
-  background-color: rgb(236, 236, 236);
-}
-
-#brew-btn {
-  position: absolute;
-  /* top: 10%;
-  left: 83%; */
-  top: 75%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  -ms-transform: translate(-50%, -50%);
-  background-color: rgb(236, 236, 236);
-  height: 50px;
-  text-transform: none !important;
 }
 </style>

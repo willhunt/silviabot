@@ -8,7 +8,9 @@ SilviaStatus::SilviaStatus()
     , status_subscriber_("status_change", &SilviaStatus::statusChangeCallback, this)
     // , status_change_server_("status_change_srv", &SilviaStatus::statusChangeSrvCallback, this)
     , settings_subscriber_("settings", &SilviaStatus::setSettingsCallback, this)
+    , settings_request_publisher_("settings_request", &settings_request_msg_)
     , mode_(MODE_OFF)
+    , settings_updated_(false)
 {
     status_report_msg_.header.frame_id = "micro";
 }
@@ -17,7 +19,15 @@ void SilviaStatus::setup(NodeHandle* nh) {
     nh->subscribe(status_subscriber_);
     nh->subscribe(settings_subscriber_);
     // nh->advertiseService(status_change_server_);
+    nh->advertise(settings_request_publisher_);
     SilviaPublisher::setup(nh);
+    update();
+}
+
+void SilviaStatus::update() {
+    if (!settings_updated_) {
+        settings_request_publisher_.publish(&settings_request_msg_);
+    }
 }
 
 void SilviaStatus::populateMessage() {
@@ -27,6 +37,7 @@ void SilviaStatus::populateMessage() {
 }
 
 void SilviaStatus::statusChangeCallback(const django_interface::SilviaStatus& msg) {
+    update();
     if (msg.mode == MODE_OFF) changeBrew(false);  // Deal with brew first if machine is being turned off
     if (msg.mode != MODE_IGNORE) changeMode(msg.mode);
     if (msg.mode != MODE_OFF) changeBrew(msg.brew);
@@ -43,6 +54,7 @@ void SilviaStatus::setSettingsCallback(const django_interface::SilviaSettings& m
     cleaner.setSettingsCallback(msg);
     heater.setSettingsCallback(msg);
     pump.setSettingsCallback(msg);
+    settings_updated_ = true;
 }
 
 void SilviaStatus::changeMode(int new_mode) {

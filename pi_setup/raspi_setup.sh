@@ -85,7 +85,7 @@ sudo netplan apply
 # Python env
 printf "Setting up Python environment...  "
 python3 -m venv ~/.virtualenvs/venv-silvia
-echo "source ~/.virtualenvs/venv-silvia/bin/activate" >> ~/.bashrc
+# echo "source ~/.virtualenvs/venv-silvia/bin/activate" >> ~/.bashrc
 source ~/.virtualenvs/venv-silvia/bin/activate
 cd ~/silviabot/silvia
 pip install -r requirements.txt
