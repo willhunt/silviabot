@@ -283,7 +283,7 @@ export default {
     });
     water_listener.subscribe((message) => {
       // console.log('Received message on ' + scale_listener.name + ': T=' + message.input);
-      this.response.low_water = Bool(message.low_water)
+      this.response.low_water = Boolean(message.low_water)
     });
     var timer_listener = new ROSLIB.Topic({
       ros : ros,
@@ -291,7 +291,7 @@ export default {
       messageType : 'django_interface/SilviaBrewTimer'
     });
     timer_listener.subscribe((message) => {
-      this.t_brew = Bool(message.duration.secs)
+      this.t_brew = Boolean(message.duration.secs)
     });
   },
   destroyed () {

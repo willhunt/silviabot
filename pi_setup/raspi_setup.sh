@@ -26,7 +26,7 @@ sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main
 sudo apt-key adv --keyserver 'hkp://keyserver.ubuntu.com:80' --recv-key C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654
 sudo apt update
 printf "Installing ROS..."
-sudo apt install ros-melodic-ros-base python-rosdep gdb -y
+sudo apt install ros-melodic-ros-base python-rosdep gdb sudo apt-get install ros-melodic-rosbridge-server -y
 printf "Setup rosdep..."
 cd ~/silviabot/catkin_ws
 sudo rosdep init
@@ -42,7 +42,7 @@ catkin_make
 
 # Install stuff
 printf "Installing linux packages...  "
-sudo apt install git python3-pip python3-venv libopenjp2-7 libtiff5 apache2 apache2-dev libapache2-mod-wsgi-py3 redis-server sshfs postgresql libpq-dev postgresql-client postgresql-client-common python-dev supervisor -y
+sudo apt install git python3-pip python3-venv libopenjp2-7 libtiff5 libffi6 libffi-dev apache2 apache2-dev libapache2-mod-wsgi-py3 redis-server sshfs postgresql libpq-dev postgresql-client postgresql-client-common python-dev supervisor -y
 
 # Static IP - add lines to file
 # printf "Setting up static IP...  "
@@ -55,32 +55,32 @@ sudo apt install git python3-pip python3-venv libopenjp2-7 libtiff5 apache2 apac
 # static domain_name_servers=192.168.0.1
 # EOL
 
-# sudo touch /etc/cloud/cloud.cfg.d/99-disable-network-config.cfg
-# sudo echo "network: {config: disabled}" > /etc/cloud/cloud.cfg.d/99-disable-network-config.cfg
+sudo touch /etc/cloud/cloud.cfg.d/99-disable-network-config.cfg
+sudo echo "network: {config: disabled}" > /etc/cloud/cloud.cfg.d/99-disable-network-config.cfg
 
-# sudo rm /etc/netplan/50-cloud-init.yaml
-# sudo touch /etc/netplan/50-cloud-init.yaml
-# sudo cat >> /etc/netplan/50-cloud-init.yaml <<EOL
-# network:
-#   version: 2
-#   renderer: networkd
-#   ethernets:
-#     eth0:
-#       dhcp4: true
-#       optional: true
-#   wifis:
-#     wlan0:
-#       access-points:
-#         VM369865-2G:
-#           password: zsrannnx
-#       dhcp4: no
-#       addresses: [192.168.0.6/24]
-#       gateway4: 192.168.0.1
-#       nameservers:
-#         addresses: [192.168.0.1, 8.8.8.8]
-#       optional: true
-# EOL
-# sudo netplan apply
+sudo rm /etc/netplan/50-cloud-init.yaml
+sudo touch /etc/netplan/50-cloud-init.yaml
+sudo cat >> /etc/netplan/50-cloud-init.yaml <<EOL
+network:
+    version: 2
+    renderer: networkd
+    ethernets:
+        eth0:
+            dhcp4: true
+            optional: true
+    wifis:
+        wlan0:
+            access-points:
+                VM369865-2G:
+                    password: zsrannnx
+            dhcp4: no
+            optional: true
+            addresses: [192.168.0.6/24]
+            gateway4: 192.168.0.1
+            nameservers:
+                addresses: [192.168.0.1, 8.8.8.8]
+EOL
+sudo netplan apply
 
 # Python env
 printf "Setting up Python environment...  "
@@ -146,6 +146,9 @@ sudo chgrp -R server_group /var/log/supervisor
 sudo chmod g+wr /var/log/supervisor/supervisord.log
 sudo supervisord -c /etc/supervisor/supervisord.conf
 
+# Static files
+cd ~/silviabot/silvia
+python manage.py collectstatic
 
 # Reboot
 printf "Finished, now reboot."

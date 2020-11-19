@@ -4,10 +4,10 @@ Celery
 celery-once
 django-celery-beat
 sqlalchemy
-random-word
 django-cors-headers
 whitenoise
 redis
 requests
 django-cors-headers
 psycopg2
+roslibpy

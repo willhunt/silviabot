@@ -59,6 +59,7 @@
   <exec_depend>message_runtime</exec_depend>
   <build_depend>rosserial_arduino</build_depend>
   <depend>rosserial_python</depend>
+  <exec_depend>rosbridge_server</exec_depend>
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>
