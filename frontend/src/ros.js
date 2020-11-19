@@ -1,7 +1,7 @@
 import ROSLIB from 'roslib'
 
 export const ros = new ROSLIB.Ros({
-    url : webpackHotUpdate
+    url : typeof webpackHotUpdate !== 'undefined'
             ? 'ws://localhost:9090'
             : 'ws://192.168.0.6:9090'
 })
