@@ -10,9 +10,6 @@ git fetch --all
 git reset --hard origin/$branch
 git checkout $branch
 
-printf "Collecting Django static files..."
-~/.virtualenvs/venv-silvia/bin/python silvia/manage.py collectstatic --noinput --clear
-
 if [ $arduino -eq 1 ]
 then
     printf "Compile Arduino code..."
@@ -23,6 +20,9 @@ fi
 
 printf "Restarting background processes...  "
 sudo supervisorctl start all
+
+printf "Collecting Django static files..."
+~/.virtualenvs/venv-silvia/bin/python silvia/manage.py collectstatic --noinput --clear
 
 printf "Restarting server...  "
 sudo service apache2 restart
