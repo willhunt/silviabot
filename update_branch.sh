@@ -11,7 +11,7 @@ git reset --hard origin/$branch
 git checkout $branch
 
 printf "Collecting Django static files..."
-python silvia/manage.py collectstatic --noinput --clear
+~/.virtual_envs/venv-silvia/bin/python silvia/manage.py collectstatic --noinput --clear
 
 if [ $arduino -eq 1 ]
 then
