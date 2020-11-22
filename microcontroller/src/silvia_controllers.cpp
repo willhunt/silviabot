@@ -78,7 +78,7 @@ void TemperatureController::populateMessage() {
     msg_.output_p = output_p_;
     msg_.output_i = output_i_;
     msg_.output_d = output_d_;
-    msg_.kd = kd_;
+    msg_.kp = kp_;
     msg_.ki = ki_;
     msg_.kd = kd_;
     msg_.active = active_;
@@ -176,6 +176,7 @@ void PressureController::setProfile(unsigned long t_profile[], double pressure_p
 }
 
 void PressureController::setSettingsCallback(const django_interface::SilviaSettings& msg) {
+    setGains(msg.pump_kp, msg.pump_ki, msg.pump_kd);
     // Dont' do anything if inputs are different lengths or less than 1 (no entries)
     if (msg.profile_time_setpoints_length != msg.profile_pressure_setpoints_length
         || msg.profile_pressure_setpoints_length < 1) return;
@@ -188,7 +189,6 @@ void PressureController::setSettingsCallback(const django_interface::SilviaSetti
         pressure_setpoints[i] = (double)(msg.profile_pressure_setpoints[i]);
     }
     setProfile(t_setpoints_millis, pressure_setpoints);
-    setGains(msg.pump_kp, msg.pump_ki, msg.pump_kd);
 }
 
 void PressureController::populateMessage() {
@@ -199,7 +199,7 @@ void PressureController::populateMessage() {
     msg_.output_p = output_p_;
     msg_.output_i = output_i_;
     msg_.output_d = output_d_;
-    msg_.kd = kd_;
+    msg_.kp = kp_;
     msg_.ki = ki_;
     msg_.kd = kd_;
     msg_.active = active_;

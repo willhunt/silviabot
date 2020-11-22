@@ -51,8 +51,8 @@ void SilviaStatus::statusChangeCallback(const django_interface::SilviaStatus& ms
 // }
 
 void SilviaStatus::setSettingsCallback(const django_interface::SilviaSettings& msg) {
-    cleaner.setSettingsCallback(msg);
     heater.setSettingsCallback(msg);
+    cleaner.setSettingsCallback(msg);
     pump.setSettingsCallback(msg);
     settings_updated_ = true;
 }

@@ -21,7 +21,7 @@ void PidController::setOutput(double output) {
     limitOutput(output_);
 }
 void PidController::setGains(double kp, double ki, double kd) {
-    if (kp < 0 || ki < 0 || kd < 0) return;
+    // if (kp < 0 || ki < 0 || kd < 0) return;
     kp_ = kp;
     ki_ = ki;
     kd_ = kd;

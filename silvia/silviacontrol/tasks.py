@@ -10,17 +10,20 @@ import roslibpy
 import requests
 import time
 
-client = roslibpy.Ros(host='localhost', port=9090)
-client.run()
-# Status
-status_publisher = roslibpy.Topic(client, '/status_change', 'django_interface/SilviaStatus', latch=False)
-status_service = roslibpy.Service(client, '/status_request', '/status')
-status_request = roslibpy.ServiceRequest()
-# Override
-heater_duty_publisher = roslibpy.Topic(client, '/heater_duty', 'std_msgs/Float64', latch=False)
-pump_duty_publisher = roslibpy.Topic(client, '/pump_duty', 'std_msgs/Float64', latch=False)
-# Settings
-settings_publisher = roslibpy.Topic(client, '/settings', 'django_interface/SilviaSettings', latch=False)
+try:
+    client = roslibpy.Ros(host='localhost', port=9090)
+    client.run()
+    # Status
+    status_publisher = roslibpy.Topic(client, '/status_change', 'django_interface/SilviaStatus', latch=False)
+    status_service = roslibpy.Service(client, '/status_request', '/status')
+    status_request = roslibpy.ServiceRequest()
+    # Override
+    heater_duty_publisher = roslibpy.Topic(client, '/heater_duty', 'std_msgs/Float64', latch=False)
+    pump_duty_publisher = roslibpy.Topic(client, '/pump_duty', 'std_msgs/Float64', latch=False)
+    # Settings
+    settings_publisher = roslibpy.Topic(client, '/settings', 'django_interface/SilviaSettings', latch=False)
+except Exception as e:
+    debug_log("ROS error: {}".format(e))
 
 @shared_task(queue='comms')
 def async_scale_update(brew, mass_setpoint):
@@ -113,5 +116,15 @@ def ros_set_settings(settings_dict=None):
     """
     if settings_dict is None:
         settings_dict = SettingsModel.objects.get(pk=1).__dict__
-    msg = roslibpy.Message(settings_dict)
+    # keep only required terms
+    keys = [
+        "temperature_setpoint", "heater_kp", "heater_ki", "heater_kd",
+        "profile_pressure_setpoints", "profile_time_setpoints", "pump_kp", "pump_ki", "pump_kd",
+        "mass_setpoint",
+        "t_clean_on", "t_clean_off", "n_clean_cycles",
+    ]
+    msg_content = dict((key, settings_dict[key]) for key in keys if key in settings_dict)
+    msg = roslibpy.Message(
+        msg_content
+    )
     settings_publisher.publish(msg)

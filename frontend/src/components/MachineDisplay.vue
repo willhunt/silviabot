@@ -15,6 +15,12 @@
       <div v-if="pressure == null">-</div>
       <div v-else>{{ pressure | temperatureDisplayFilter }} bar</div>
     </v-btn>
+    <v-btn v-if="machineOn" id="brew-btn" class="" outlined text color="secondary">
+        <v-col>
+          <v-row class="pb-1" justify="center">{{ mass | temperatureDisplayFilter }}g</v-row>
+          <v-row class="" justify="center">{{ brew_time }}s</v-row>
+        </v-col>
+      </v-btn>
   </div>
 </template>
 
@@ -25,7 +31,9 @@ export default {
     machineOn: Boolean,
     temperature: Number,
     temperature_setpoint: Number,
-    pressure: Number
+    pressure: Number,
+    mass: Number,
+    brew_time: Number
   },
   computed: {
     tempBtnColor: function () {
@@ -69,5 +77,17 @@ export default {
   -ms-transform: translate(-50%, -50%);
   background-color: rgb(236, 236, 236);
   text-transform: none;
+}
+#brew-btn {
+  position: absolute;
+  /* top: 10%;
+  left: 83%; */
+  top: 75%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  -ms-transform: translate(-50%, -50%);
+  background-color: rgb(236, 236, 236);
+  height: 50px;
+  text-transform: none !important;
 }
 </style>
