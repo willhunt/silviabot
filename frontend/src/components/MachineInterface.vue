@@ -7,7 +7,7 @@
           :machineOn="machineOn"
           :temperature="response.temperature"
           :temperature_setpoint="response.temperature_setpoint"
-          :pressure="response.pressure"
+          :pressure="response.pressure / 100000"
           :mass="response.mass"
           :brew_time="t_brew"
         />
