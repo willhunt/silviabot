@@ -61,7 +61,7 @@ class RosResponseManager:
     def scale_callback(self, msg):
         self.scale_msg = msg
 
-    def settings_request_callback(self):
+    def settings_request_callback(self, msg):
         ros_set_settings()
 
     def initiate_response_log(self):

@@ -32,6 +32,7 @@ class SilviaStatus : public SilviaPublisher {
         void setSettingsCallback(const django_interface::SilviaSettings& msg);
         int mode_;
         bool settings_updated_;  // Flag that settings have been updated by database (django) after startup
+        bool last_brew_status_;  // Chaeck if brew status is changed to publish state
 
     public:
         SilviaStatus();

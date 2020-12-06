@@ -255,9 +255,10 @@ export default {
     });
     pump_listener.subscribe((message) => {
       // console.log('Received message on ' + pump_listener.name + ': P=' + message.input);
-      this.pressure = Number(message.input)
-      this.pressure_setpoint = Number(message.setpoint)
-      this.pump_duty = Number(message.output)
+      this.response.pressure = Number(message.input)
+      this.response.pressure_setpoint = Number(message.setpoint)
+      this.response.pump_duty = Number(message.output)
+      this.response.brew = Boolean(message.active)
     });
     var scale_listener = new ROSLIB.Topic({
       ros : ros,

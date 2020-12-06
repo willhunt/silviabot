@@ -11,6 +11,7 @@ SilviaStatus::SilviaStatus()
     , settings_request_publisher_("settings_request", &settings_request_msg_)
     , mode_(MODE_OFF)
     , settings_updated_(false)
+    , last_brew_status_(false)
 {
     status_report_msg_.header.frame_id = "micro";
 }
@@ -28,6 +29,11 @@ void SilviaStatus::update() {
     if (!settings_updated_) {
         settings_request_publisher_.publish(&settings_request_msg_);
     }
+    // Brew might be changed by cleaner. Check to see if state needs to be published.
+    if (last_brew_status_ != getBrew()) {
+        publish(true);
+    }
+    last_brew_status_ = getBrew();
 }
 
 void SilviaStatus::populateMessage() {
@@ -80,7 +86,7 @@ void SilviaStatus::changeMode(int new_mode) {
             heater.activate();
         } else if (new_mode == MODE_MANUAL && mode_ != MODE_MANUAL) { // Change to manual
             heater.setOutput(0);
-        } else if (new_mode == MODE_CLEAN && mode_ != MODE_CLEAN) {
+        } else if (new_mode == MODE_CLEAN && mode_ != MODE_CLEAN) {  // CHange to cleaning
             cleaner.start(mode_);
         }
     }
@@ -94,13 +100,13 @@ void SilviaStatus::changeBrew(bool brew) {
             brew_output.on();
             brew_timer.reset();
             brew_timer.start();
+            pump.enableOutput();
             if (mode_ == MODE_PID) {
+                pump.activate();
                 // Change to manual mode to max power and no integral windup
                 changeMode(MODE_MANUAL);
                 heater.temporaryOverride(true, 100);
             }
-            pump.enableOutput();
-            if (mode_ == MODE_PID) pump.activate();
         }
     } else {
         brew_output.off();

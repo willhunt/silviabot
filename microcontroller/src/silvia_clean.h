@@ -19,7 +19,7 @@ class CleaningProcess : public SilviaPublisher {
         int n_cycles_;  // Number of pump on/off cycles
         unsigned long t_on_;  // Time pump is on for each cycle
         unsigned long t_off_;  // Time pump is off for each cycle
-        int t_total_;  // Total cleaning time
+        unsigned long t_total_;  // Total cleaning time
         unsigned char previous_mode_;
         unsigned long duration_;  // Duration of cleaning so far
         unsigned long t_start_;

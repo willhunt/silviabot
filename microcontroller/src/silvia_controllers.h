@@ -52,7 +52,7 @@ class PressureController : public PidController, public  SilviaPublisher {
         django_interface::SilviaController msg_;
         ros::Subscriber<std_msgs::Float64, PressureController> override_subscriber_;
         void overrideCallback(const std_msgs::Float64& msg);
-        void setProfile(unsigned long t_profile_[], double pressure_profile_[]);
+        void setProfile(unsigned long t_profile_[], double pressure_profile_[], int profile_length);
         void populateMessage();
 
     public:
@@ -65,7 +65,7 @@ class PressureController : public PidController, public  SilviaPublisher {
         void enableOutput();
         void disableOutput();
         // void deactivate();
-        void compute(unsigned long t);
+        void compute(int t);
         void setSettingsCallback(const django_interface::SilviaSettings& msg);
 };
 

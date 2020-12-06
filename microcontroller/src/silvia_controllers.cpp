@@ -45,9 +45,9 @@ int TemperatureController::getRelayPin() {
 bool TemperatureController::getTemporaryOverride() {
     return temporary_override_;
 }
-void TemperatureController::temporaryOverride(bool override, double output) {
+void TemperatureController::temporaryOverride(bool override, double duty) {
     if (override) {
-        output_ = output;
+        setDuty(duty);
         deactivate();
     } else if (temporary_override_) {
         reset();
@@ -93,7 +93,7 @@ PressureController::PressureController(double* input, dimmerLamp* dimmer)
     // , dimmer_pin_(dimmer_pin)
     // , dimmer_(dimmer_pin)
 {
-    setSetpoint(9e5);
+    setSetpoint(0);
     // pinMode(dimmer_pin_, OUTPUT);
     setOutputLimits(0, 98);
     setUpdateInterval(200);
@@ -144,25 +144,23 @@ void PressureController::disableOutput() {
 double PressureController::getProfilePressure(unsigned long t) {
     if (!active_) return 0.0;
     for (int i = 1; i < PROFILE_STEPS; i++) {
-        if (t >= (float)t_profile_[i-1] && t < (float)t_profile_[i]) {
+        if (t >= t_profile_[i-1] && t < t_profile_[i]) {
             return pressure_profile_[i] + (pressure_profile_[i] - pressure_profile_[i-1]) / 
-                (double)(t_profile_[i] - t_profile_[i-1]) * (t - (double)t_profile_[i]);
+                (double)((int)t_profile_[i]/1000 - (int)t_profile_[i-1]/1000) * 
+                (double)((int)t/1000 - (int)t_profile_[i]/1000);
         }
     }
     if (t > t_profile_[PROFILE_STEPS-1]) return pressure_profile_[PROFILE_STEPS-1];
     else return 0.0;
 }
 
-void PressureController::compute(unsigned long t) {
+void PressureController::compute(int t) {
     setpoint_ = getProfilePressure(t);
     PidController::compute();
 }
 
-void PressureController::setProfile(unsigned long t_profile[], double pressure_profile[]) {
-    int profile_length = sizeof(t_profile) / sizeof(t_profile[0]);
-    // Dont' do anything if inputs are different lengths or less than 1 (no entries)
-    if (profile_length != sizeof(pressure_profile) / sizeof(pressure_profile[0])
-        || profile_length < 1) return;
+void PressureController::setProfile(unsigned long t_profile[], double pressure_profile[], int profile_length) {
+    if (profile_length < 1) return;
 
     for (int i = 0; i < PROFILE_STEPS; i++) {
         if (i < profile_length) {  // Don't overrun allocated memory
@@ -185,10 +183,10 @@ void PressureController::setSettingsCallback(const django_interface::SilviaSetti
     unsigned long t_setpoints_millis[length];
     double pressure_setpoints[length];
     for (int i = 0; i < length; i++) {
-        t_setpoints_millis[i] = (unsigned long)(msg.profile_time_setpoints[i] * 1000);
-        pressure_setpoints[i] = (double)(msg.profile_pressure_setpoints[i]);
+        t_setpoints_millis[i] = (unsigned long)msg.profile_time_setpoints[i] * 1000;
+        pressure_setpoints[i] = (double)msg.profile_pressure_setpoints[i];
     }
-    setProfile(t_setpoints_millis, pressure_setpoints);
+    setProfile(t_setpoints_millis, pressure_setpoints, length);
 }
 
 void PressureController::populateMessage() {
@@ -199,9 +197,9 @@ void PressureController::populateMessage() {
     msg_.output_p = output_p_;
     msg_.output_i = output_i_;
     msg_.output_d = output_d_;
-    msg_.kp = kp_;
-    msg_.ki = ki_;
-    msg_.kd = kd_;
+    msg_.kp = t_profile_[0];//kp_;
+    msg_.ki = t_profile_[1];//ki_;
+    msg_.kd = t_profile_[2];//kd_;
     msg_.active = active_;
 }
 

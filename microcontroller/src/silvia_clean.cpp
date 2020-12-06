@@ -6,8 +6,8 @@ CleaningProcess::CleaningProcess()
     : SilviaPublisher("cleaner", &msg_, PUB_CLEANER_INTERVAL)
     , active_(false)
     , n_cycles_(5)
-    , t_on_(5000)
-    , t_off_(5000)
+    , t_on_(2000)
+    , t_off_(2000)
 {}
 
 void CleaningProcess::setup(NodeHandle* nh) {
@@ -26,10 +26,12 @@ void CleaningProcess::start(int previous_mode) {
 void CleaningProcess::pumpOn() {
     if (!water_sensor.lowWater()) {  
         brew_output.on();
+        pump.setOutput(100);
     }
 }
 void CleaningProcess::pumpOff() {
-    brew_output.on();
+    brew_output.off();
+    pump.setOutput(0);
 }
 
 void CleaningProcess::stop() {
@@ -44,16 +46,14 @@ int CleaningProcess::update() {
     if (duration_ > t_total_) {
         stop();
         return previous_mode_;
-    } else if ((int)duration_ % (t_on_ + t_off_) < t_on_) {
+    } else if (duration_ % (t_on_ + t_off_) < t_on_) {
         if (!brew_output.getStatus()) {
             pumpOn();
-            pump.setOutput(100);
         }
         return MODE_CLEAN;
     } else {
         if (brew_output.getStatus()) {
             pumpOff();
-            pump.setOutput(0);
         }
         return MODE_CLEAN;
     }

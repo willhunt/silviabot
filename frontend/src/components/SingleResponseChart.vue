@@ -27,7 +27,7 @@
 import ResponseChart from '@/components/ResponseChart.vue'
 
 export default {
-  name: 'Sessions',
+  name: 'SingleResponseChart',
   components: {
     ResponseChart
   },
